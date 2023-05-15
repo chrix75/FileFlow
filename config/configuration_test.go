@@ -1,6 +1,7 @@
 package config
 
 import (
+	"regexp"
 	"testing"
 )
 
@@ -95,5 +96,37 @@ file_flows:
 
 	if cfg.FileFlows[0].Pattern != ".+" {
 		t.Errorf("Expected .+, got %s", cfg.FileFlows[0].Pattern)
+	}
+}
+
+func TestDestinationFound(t *testing.T) {
+	// Given
+	pattern := ".+"
+	flow := FileFlow{"Move ACME files", "localhost", 22, "sftp/acme", pattern, "/dest", regexp.MustCompile(pattern)}
+
+	// When
+	d := flow.destination("file_A")
+
+	// Then
+	if d == "" {
+		t.Errorf("Expected destination action, got nothing")
+	}
+
+	if d != "/dest/file_A" {
+		t.Errorf("Expected /dest/file_A, got %s", d)
+	}
+}
+
+func TestDestinationNotFound(t *testing.T) {
+	// Given
+	pattern := "foo_.+"
+	flow := FileFlow{"Move ACME files", "localhost", 22, "sftp/acme", pattern, "/dest", regexp.MustCompile(pattern)}
+
+	// When
+	d := flow.destination("file_A")
+
+	// Then
+	if d != "" {
+		t.Errorf("Expected no destination action, got %s", d)
 	}
 }

@@ -3,6 +3,7 @@ package config
 import (
 	"gopkg.in/yaml.v3"
 	"log"
+	"regexp"
 )
 
 type FFConfig struct {
@@ -16,6 +17,7 @@ type FileFlow struct {
 	SourceFolder      string `yaml:"from"`
 	Pattern           string `default:".+"`
 	DestinationFolder string `yaml:"to"`
+	regexp            *regexp.Regexp
 }
 
 func ReadConfiguration(cfg string) (*FFConfig, error) {
@@ -29,13 +31,15 @@ func ReadConfiguration(cfg string) (*FFConfig, error) {
 
 	flows := make([]FileFlow, len(read.FileFlows))
 	for i, flow := range read.FileFlows {
+		pattern := usedPattern(&flow)
 		flows[i] = FileFlow{
 			flow.Name,
 			flow.Server,
 			usedPort(&flow),
 			flow.SourceFolder,
-			usedPattern(&flow),
+			pattern,
 			flow.DestinationFolder,
+			regexp.MustCompile(pattern),
 		}
 	}
 
@@ -68,4 +72,11 @@ func usedPort(f *FileFlow) int {
 		usedPort = f.Port
 	}
 	return usedPort
+}
+
+func (f *FileFlow) destination(path string) string {
+	if f.regexp.MatchString(path) {
+		return f.DestinationFolder + "/" + path
+	}
+	return ""
 }
