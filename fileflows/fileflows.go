@@ -1,4 +1,4 @@
-package config
+package fileflows
 
 import (
 	"gopkg.in/yaml.v3"
