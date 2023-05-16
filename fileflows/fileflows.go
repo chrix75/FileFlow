@@ -13,9 +13,9 @@ type FFConfig struct {
 type FileFlow struct {
 	Name               string
 	Server             string
-	Port               int      `default:"22"`
-	SourceFolder       string   `yaml:"from"`
-	Pattern            string   `default:".+"`
+	Port               int
+	SourceFolder       string `yaml:"from"`
+	Pattern            string
 	DestinationFolders []string `yaml:"to"`
 	Regexp             *regexp.Regexp
 }
