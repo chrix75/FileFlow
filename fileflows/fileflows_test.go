@@ -45,8 +45,8 @@ file_flows:
 		t.Errorf("Expected sftp/acme, got %s", cfg.FileFlows[0].SourceFolder)
 	}
 
-	if cfg.FileFlows[0].DestinationFolder[0] != "/Users/Batman/fileflow/acme" {
-		t.Errorf("Expected /Users/Batman/fileflow/acme, got %s", cfg.FileFlows[0].DestinationFolder)
+	if cfg.FileFlows[0].DestinationFolders[0] != "/Users/Batman/fileflow/acme" {
+		t.Errorf("Expected /Users/Batman/fileflow/acme, got %s", cfg.FileFlows[0].DestinationFolders)
 	}
 
 	if cfg.FileFlows[0].Pattern != ".+" {
@@ -92,8 +92,8 @@ file_flows:
 		t.Errorf("Expected sftp/acme, got %s", cfg.FileFlows[0].SourceFolder)
 	}
 
-	if cfg.FileFlows[0].DestinationFolder[0] != "/Users/Batman/fileflow/acme" {
-		t.Errorf("Expected /Users/Batman/fileflow/acme, got %s", cfg.FileFlows[0].DestinationFolder)
+	if cfg.FileFlows[0].DestinationFolders[0] != "/Users/Batman/fileflow/acme" {
+		t.Errorf("Expected /Users/Batman/fileflow/acme, got %s", cfg.FileFlows[0].DestinationFolders)
 	}
 
 	if cfg.FileFlows[0].Pattern != ".+" {

@@ -10,7 +10,7 @@ import (
 func TestDispatchOneFileIntoOneDestination(t *testing.T) {
 	// Given
 	pattern := ".+"
-	flow := fileflows.FileFlow{Name: "Move ACME files", Server: "localhost", Port: 22, SourceFolder: "sftp/acme", Pattern: pattern, DestinationFolder: []string{"/dest1"}, Regexp: regexp.MustCompile(pattern)}
+	flow := fileflows.FileFlow{Name: "Move ACME files", Server: "localhost", Port: 22, SourceFolder: "sftp/acme", Pattern: pattern, DestinationFolders: []string{"/dest1"}, Regexp: regexp.MustCompile(pattern)}
 
 	callback := func(source string, destination string) error {
 		return nil
@@ -35,7 +35,7 @@ func TestDispatchOneFileIntoOneDestination(t *testing.T) {
 func TestDispatchTwoFileIntoOneDestination(t *testing.T) {
 	// Given
 	pattern := ".+"
-	flow := fileflows.FileFlow{Name: "Move ACME files", Server: "localhost", Port: 22, SourceFolder: "sftp/acme", Pattern: pattern, DestinationFolder: []string{"/dest1"}, Regexp: regexp.MustCompile(pattern)}
+	flow := fileflows.FileFlow{Name: "Move ACME files", Server: "localhost", Port: 22, SourceFolder: "sftp/acme", Pattern: pattern, DestinationFolders: []string{"/dest1"}, Regexp: regexp.MustCompile(pattern)}
 
 	callback := func(source string, destination string) error {
 		return nil
@@ -65,7 +65,7 @@ func TestDispatchTwoFileIntoOneDestination(t *testing.T) {
 func TestDispatchOneFileIntoManyDestinations(t *testing.T) {
 	// Given
 	pattern := ".+"
-	flow := fileflows.FileFlow{Name: "Move ACME files", Server: "localhost", Port: 22, SourceFolder: "sftp/acme", Pattern: pattern, DestinationFolder: []string{"/dest1", "/dest2"}, Regexp: regexp.MustCompile(pattern)}
+	flow := fileflows.FileFlow{Name: "Move ACME files", Server: "localhost", Port: 22, SourceFolder: "sftp/acme", Pattern: pattern, DestinationFolders: []string{"/dest1", "/dest2"}, Regexp: regexp.MustCompile(pattern)}
 
 	callback := func(source string, destination string) error {
 		return nil
@@ -90,7 +90,7 @@ func TestDispatchOneFileIntoManyDestinations(t *testing.T) {
 func TestDispatchTwoFilesIntoManyDestinations(t *testing.T) {
 	// Given
 	pattern := ".+"
-	flow := fileflows.FileFlow{Name: "Move ACME files", Server: "localhost", Port: 22, SourceFolder: "sftp/acme", Pattern: pattern, DestinationFolder: []string{"/dest1", "/dest2"}, Regexp: regexp.MustCompile(pattern)}
+	flow := fileflows.FileFlow{Name: "Move ACME files", Server: "localhost", Port: 22, SourceFolder: "sftp/acme", Pattern: pattern, DestinationFolders: []string{"/dest1", "/dest2"}, Regexp: regexp.MustCompile(pattern)}
 
 	callback := func(source string, destination string) error {
 		return nil
@@ -120,7 +120,7 @@ func TestDispatchTwoFilesIntoManyDestinations(t *testing.T) {
 func TestDestinationAvailability(t *testing.T) {
 	// Given
 	pattern := ".+"
-	flow := fileflows.FileFlow{Name: "Move ACME files", Server: "localhost", Port: 22, SourceFolder: "sftp/acme", Pattern: pattern, DestinationFolder: []string{"/dest1", "/dest2"}, Regexp: regexp.MustCompile(pattern)}
+	flow := fileflows.FileFlow{Name: "Move ACME files", Server: "localhost", Port: 22, SourceFolder: "sftp/acme", Pattern: pattern, DestinationFolders: []string{"/dest1", "/dest2"}, Regexp: regexp.MustCompile(pattern)}
 
 	callback := func(source string, destination string) error {
 		return nil
@@ -144,7 +144,7 @@ func TestDestinationAvailability(t *testing.T) {
 func TestNoDestinationIsAvailable(t *testing.T) {
 	// Given
 	pattern := ".+"
-	flow := fileflows.FileFlow{Name: "Move ACME files", Server: "localhost", Port: 22, SourceFolder: "sftp/acme", Pattern: pattern, DestinationFolder: []string{"/dest1"}, Regexp: regexp.MustCompile(pattern)}
+	flow := fileflows.FileFlow{Name: "Move ACME files", Server: "localhost", Port: 22, SourceFolder: "sftp/acme", Pattern: pattern, DestinationFolders: []string{"/dest1"}, Regexp: regexp.MustCompile(pattern)}
 
 	callback := func(source string, destination string) error {
 		return nil

@@ -50,7 +50,7 @@ func (d *Dispatcher) Dispatch(fileName string) (dst string, err error) {
 		}
 
 		d.dstOffset++
-		if d.dstOffset >= len(d.flow.DestinationFolder) {
+		if d.dstOffset >= len(d.flow.DestinationFolders) {
 			d.dstOffset = 0
 		}
 
@@ -70,7 +70,7 @@ func ConcatFolderWithFile(folder string, fileName string) string {
 func (d *Dispatcher) tryDispatch(fileName string) (string, error) {
 	src := ConcatFolderWithFile(d.flow.SourceFolder, fileName)
 
-	folder := d.flow.DestinationFolder[d.dstOffset]
+	folder := d.flow.DestinationFolders[d.dstOffset]
 	if d.folderAvailability.isAvailable(folder) {
 		dst := ConcatFolderWithFile(folder, fileName)
 		if err := d.callback(src, dst); err != nil {
@@ -78,7 +78,7 @@ func (d *Dispatcher) tryDispatch(fileName string) (string, error) {
 		}
 
 		d.dstOffset++
-		if d.dstOffset >= len(d.flow.DestinationFolder) {
+		if d.dstOffset >= len(d.flow.DestinationFolders) {
 			d.dstOffset = 0
 		}
 

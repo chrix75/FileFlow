@@ -11,13 +11,13 @@ type FFConfig struct {
 }
 
 type FileFlow struct {
-	Name              string
-	Server            string
-	Port              int      `default:"22"`
-	SourceFolder      string   `yaml:"from"`
-	Pattern           string   `default:".+"`
-	DestinationFolder []string `yaml:"to"`
-	Regexp            *regexp.Regexp
+	Name               string
+	Server             string
+	Port               int      `default:"22"`
+	SourceFolder       string   `yaml:"from"`
+	Pattern            string   `default:".+"`
+	DestinationFolders []string `yaml:"to"`
+	Regexp             *regexp.Regexp
 }
 
 func ReadConfiguration(cfg string) (*FFConfig, error) {
@@ -38,7 +38,7 @@ func ReadConfiguration(cfg string) (*FFConfig, error) {
 			usedPort(&flow),
 			flow.SourceFolder,
 			pattern,
-			flow.DestinationFolder,
+			flow.DestinationFolders,
 			regexp.MustCompile(pattern),
 		}
 	}
@@ -76,7 +76,7 @@ func usedPort(f *FileFlow) int {
 
 func (f *FileFlow) destination(path string) string {
 	if f.Regexp.MatchString(path) {
-		return f.DestinationFolder[0] + "/" + path
+		return f.DestinationFolders[0] + "/" + path
 	}
 	return ""
 }
