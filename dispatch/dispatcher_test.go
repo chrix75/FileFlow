@@ -168,10 +168,10 @@ func TestNoDestinationIsAvailable(t *testing.T) {
 type mockAlwaysTrueFolderAvailability struct{}
 type mockFolderAvailability struct{}
 
-func (m *mockFolderAvailability) isAvailable(folder string) bool {
+func (m *mockFolderAvailability) IsAvailable(folder string) bool {
 	return folder != "/dest1"
 }
 
-func (m *mockAlwaysTrueFolderAvailability) isAvailable(_ string) bool {
+func (m *mockAlwaysTrueFolderAvailability) IsAvailable(_ string) bool {
 	return true
 }

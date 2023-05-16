@@ -30,7 +30,7 @@ type Callback func(src string, dst string) error
 
 // FolderAvailability is a type setting the availability of a folder.
 type FolderAvailability interface {
-	isAvailable(folder string) bool
+	IsAvailable(folder string) bool
 }
 
 // NewDispatcher creates a new Dispatcher instance.
@@ -98,7 +98,7 @@ func (d *Dispatcher) tryDispatch(fileName string) (string, error) {
 	src := ConcatFolderWithFile(d.flow.SourceFolder, fileName)
 
 	folder := d.flow.DestinationFolders[d.dstOffset]
-	if d.folderAvailability.isAvailable(folder) {
+	if d.folderAvailability.IsAvailable(folder) {
 		dst := ConcatFolderWithFile(folder, fileName)
 		if err := d.callback(src, dst); err != nil {
 			return "", err
