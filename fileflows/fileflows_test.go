@@ -14,7 +14,8 @@ file_flows:
     port: 22 
     from: sftp/acme
     pattern: .+  
-    to: /Users/Batman/fileflow/acme
+    to:
+    - /Users/Batman/fileflow/acme
 `
 
 	// When
@@ -44,7 +45,7 @@ file_flows:
 		t.Errorf("Expected sftp/acme, got %s", cfg.FileFlows[0].SourceFolder)
 	}
 
-	if cfg.FileFlows[0].DestinationFolder != "/Users/Batman/fileflow/acme" {
+	if cfg.FileFlows[0].DestinationFolder[0] != "/Users/Batman/fileflow/acme" {
 		t.Errorf("Expected /Users/Batman/fileflow/acme, got %s", cfg.FileFlows[0].DestinationFolder)
 	}
 
@@ -60,7 +61,8 @@ file_flows:
   - name: Move ACME files
     server: localhost
     from: sftp/acme
-    to: /Users/Batman/fileflow/acme
+    to: 
+    - /Users/Batman/fileflow/acme
 `
 
 	// When
@@ -90,7 +92,7 @@ file_flows:
 		t.Errorf("Expected sftp/acme, got %s", cfg.FileFlows[0].SourceFolder)
 	}
 
-	if cfg.FileFlows[0].DestinationFolder != "/Users/Batman/fileflow/acme" {
+	if cfg.FileFlows[0].DestinationFolder[0] != "/Users/Batman/fileflow/acme" {
 		t.Errorf("Expected /Users/Batman/fileflow/acme, got %s", cfg.FileFlows[0].DestinationFolder)
 	}
 
@@ -102,7 +104,7 @@ file_flows:
 func TestDestinationFound(t *testing.T) {
 	// Given
 	pattern := ".+"
-	flow := FileFlow{"Move ACME files", "localhost", 22, "sftp/acme", pattern, "/dest", regexp.MustCompile(pattern)}
+	flow := FileFlow{"Move ACME files", "localhost", 22, "sftp/acme", pattern, []string{"/dest"}, regexp.MustCompile(pattern)}
 
 	// When
 	d := flow.destination("file_A")
@@ -120,7 +122,7 @@ func TestDestinationFound(t *testing.T) {
 func TestDestinationNotFound(t *testing.T) {
 	// Given
 	pattern := "foo_.+"
-	flow := FileFlow{"Move ACME files", "localhost", 22, "sftp/acme", pattern, "/dest", regexp.MustCompile(pattern)}
+	flow := FileFlow{"Move ACME files", "localhost", 22, "sftp/acme", pattern, []string{"/dest"}, regexp.MustCompile(pattern)}
 
 	// When
 	d := flow.destination("file_A")
