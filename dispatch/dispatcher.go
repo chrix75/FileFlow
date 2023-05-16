@@ -1,3 +1,4 @@
+// Package dispatch provide functions and types for dispatching files into different folders.
 package dispatch
 
 import (
@@ -6,13 +7,15 @@ import (
 	"strings"
 )
 
+// Dispatcher contains data and functions for dispatching files into different folders.
 type Dispatcher struct {
 	flow               *fileflows.FileFlow
 	callback           Callback
 	dstOffset          int
-	folderAvailability folderAvailability
+	folderAvailability FolderAvailability
 }
 
+// DispatcherError is an error type for managing error while dispatching files.
 type DispatcherError struct {
 	source string
 }
@@ -21,13 +24,29 @@ func (de DispatcherError) Error() string {
 	return fmt.Sprintf("can't dispatch file %s because there is no available folder", de.source)
 }
 
+// Callback is a function that is called when a destination folder is allocated to a file while dispatching.
+// The src parameter is the absolute source file path name and the dst parameter is the absolute destination file path.
 type Callback func(src string, dst string) error
 
-type folderAvailability interface {
+// FolderAvailability is a type setting the availability of a folder.
+type FolderAvailability interface {
 	isAvailable(folder string) bool
 }
 
-func NewDispatcher(flow *fileflows.FileFlow, fa folderAvailability, callback Callback) *Dispatcher {
+// NewDispatcher creates a new Dispatcher instance.
+// Example:
+//
+//	pattern := ".+"
+//	flow := fileflows.FileFlow{Name: "Move ACME files", Server: "localhost", Port: 22, SourceFolder: "sftp/acme", Pattern: pattern, DestinationFolders: []string{"/dest1"}, Regexp: regexp.MustCompile(pattern)}
+//
+//	callback := func(source string, destination string) error {
+//		return nil
+//	}
+//
+//	var mock FolderAvailability = new(mockAlwaysTrueFolderAvailability)
+//
+//	dispatcher := NewDispatcher(&flow, mock, callback)
+func NewDispatcher(flow *fileflows.FileFlow, fa FolderAvailability, callback Callback) *Dispatcher {
 	return &Dispatcher{
 		flow,
 		callback,
@@ -36,6 +55,12 @@ func NewDispatcher(flow *fileflows.FileFlow, fa folderAvailability, callback Cal
 	}
 }
 
+// Dispatch method dispatches a file into a destination folder.
+// This method searches a available folder (using FolderAvailability interface) for the fileName file.
+// The src parameter is not an absolute file path but really the file name. The source folder is set in the flow field
+// of the Dispatcher instance. When a folder is found, then the callback function is called.
+// If the dispatch is successful, then the dst parameter is set to the absolute destination file path and err is nil.
+// If any error occurs, then the dst parameter is set to an empty string and err is set.
 func (d *Dispatcher) Dispatch(fileName string) (dst string, err error) {
 	start := d.dstOffset
 
@@ -60,6 +85,8 @@ func (d *Dispatcher) Dispatch(fileName string) (dst string, err error) {
 	}
 }
 
+// ConcatFolderWithFile is an utility function that concatenates a folder and a file name.
+// It works only for Linux style file path.
 func ConcatFolderWithFile(folder string, fileName string) string {
 	if strings.HasSuffix(folder, "/") {
 		return folder + fileName

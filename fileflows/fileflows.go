@@ -1,3 +1,4 @@
+// Package fileflows provides flows configuration.
 package fileflows
 
 import (
@@ -6,10 +7,12 @@ import (
 	"regexp"
 )
 
+// FFConfig is the presentation of all flows defined in the config YAML file.
 type FFConfig struct {
 	FileFlows []FileFlow `yaml:"file_flows"`
 }
 
+// FileFlow represents a flow defined in the config YAML file.
 type FileFlow struct {
 	Name               string
 	Server             string
@@ -20,6 +23,7 @@ type FileFlow struct {
 	Regexp             *regexp.Regexp
 }
 
+// ReadConfiguration reads a config YAML and returns a FFConfig struct.
 func ReadConfiguration(cfg string) (*FFConfig, error) {
 	read := FFConfig{}
 	err := yaml.Unmarshal([]byte(cfg), &read)

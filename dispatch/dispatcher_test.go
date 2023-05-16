@@ -16,7 +16,7 @@ func TestDispatchOneFileIntoOneDestination(t *testing.T) {
 		return nil
 	}
 
-	var mock folderAvailability = new(mockAlwaysTrueFolderAvailability)
+	var mock FolderAvailability = new(mockAlwaysTrueFolderAvailability)
 
 	// When
 	dispatcher := NewDispatcher(&flow, mock, callback)
@@ -41,7 +41,7 @@ func TestDispatchTwoFileIntoOneDestination(t *testing.T) {
 		return nil
 	}
 
-	var mock folderAvailability = new(mockAlwaysTrueFolderAvailability)
+	var mock FolderAvailability = new(mockAlwaysTrueFolderAvailability)
 
 	// When
 	dispatcher := NewDispatcher(&flow, mock, callback)
@@ -71,7 +71,7 @@ func TestDispatchOneFileIntoManyDestinations(t *testing.T) {
 		return nil
 	}
 
-	var mock folderAvailability = new(mockAlwaysTrueFolderAvailability)
+	var mock FolderAvailability = new(mockAlwaysTrueFolderAvailability)
 
 	// When
 	dispatcher := NewDispatcher(&flow, mock, callback)
@@ -96,7 +96,7 @@ func TestDispatchTwoFilesIntoManyDestinations(t *testing.T) {
 		return nil
 	}
 
-	var mock folderAvailability = new(mockAlwaysTrueFolderAvailability)
+	var mock FolderAvailability = new(mockAlwaysTrueFolderAvailability)
 
 	// When
 	dispatcher := NewDispatcher(&flow, mock, callback)
@@ -127,7 +127,7 @@ func TestDestinationAvailability(t *testing.T) {
 	}
 
 	// When
-	var mock folderAvailability = new(mockFolderAvailability)
+	var mock FolderAvailability = new(mockFolderAvailability)
 	dispatcher := NewDispatcher(&flow, mock, callback)
 	dst, err := dispatcher.Dispatch("file_A")
 
@@ -151,7 +151,7 @@ func TestNoDestinationIsAvailable(t *testing.T) {
 	}
 
 	// When
-	var mock folderAvailability = new(mockFolderAvailability)
+	var mock FolderAvailability = new(mockFolderAvailability)
 	dispatcher := NewDispatcher(&flow, mock, callback)
 	_, err := dispatcher.Dispatch("file_A")
 
