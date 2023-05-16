@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
+	"io/fs"
 	"log"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -15,13 +17,29 @@ import (
 // To work, a configuration file must be provided that describes all flows.
 // The configuration file format is described in the README.md.
 func main() {
-	pattern := ".+2023"
-	flow := fileflows.NewFileFlow("Move ACME files", "localhost", 22, "sftp/acme", pattern, []string{"/Users/batman/sftp/moved"})
+	var wg sync.WaitGroup
 
-	for {
-		processFlow(flow, "/Users/batman/.ssh/test.sftp.privatekey.file")
-		time.Sleep(time.Second * 10)
-	}
+	wg.Add(2)
+	flowA := fileflows.NewFileFlow("Move ACME files", "localhost", 22, "sftp/acme", ".+", []string{"/Users/batman/sftp/moved", "/Users/batman/sftp/moved2"})
+	flowB := fileflows.NewFileFlow("Move Nexus files", "localhost", 22, "sftp/nexus", ".+", []string{"/Users/batman/sftp/moved", "/Users/batman/sftp/moved2"})
+
+	go func() {
+		defer wg.Done()
+		for {
+			processFlow(flowA, "/Users/batman/.ssh/test.sftp.privatekey.file")
+			time.Sleep(time.Second * 10)
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		for {
+			processFlow(flowB, "/Users/batman/.ssh/test.sftp.privatekey.file")
+			time.Sleep(time.Second * 10)
+		}
+	}()
+
+	wg.Wait()
 }
 
 func processFlow(flow fileflows.FileFlow, keyFile string) {
@@ -31,7 +49,7 @@ func processFlow(flow fileflows.FileFlow, keyFile string) {
 	sc := sftpClient(client)
 	defer sc.Close()
 
-	log.Printf("Connected to server SFTP")
+	log.Printf("Connected to server SFTP for flow %s", flow.Name)
 
 	files := files(flow, sc)
 
@@ -65,7 +83,8 @@ func processFlow(flow fileflows.FileFlow, keyFile string) {
 		return nil
 	}
 
-	aa := alwaysAvailable{}
+	//todo manage maxFileCount by FileFlow
+	aa := availabilityByFileCount{maxFileCount: 3}
 	dispatcher := dispatch.NewDispatcher(&flow, dispatch.FolderAvailability(aa), moveFile)
 	for _, f := range files {
 		dst, err := dispatcher.Dispatch(f.Name())
@@ -124,8 +143,26 @@ func sshClient(flow fileflows.FileFlow, keyFile string) *ssh.Client {
 	return client
 }
 
-type alwaysAvailable struct{}
+type availabilityByFileCount struct {
+	maxFileCount int
+}
 
-func (a alwaysAvailable) IsAvailable(_ string) bool {
-	return true
+func (a availabilityByFileCount) IsAvailable(folder string) bool {
+	if a.maxFileCount == 0 {
+		return true
+	}
+
+	dir, err := fs.ReadDir(os.DirFS(folder), ".")
+	if err != nil {
+		return false
+	}
+
+	count := 0
+	for _, file := range dir {
+		if file.Type().IsRegular() {
+			count++
+		}
+	}
+
+	return count < a.maxFileCount
 }
