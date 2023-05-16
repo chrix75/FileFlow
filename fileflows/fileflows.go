@@ -84,3 +84,14 @@ func (f *FileFlow) destination(path string) string {
 	}
 	return ""
 }
+func NewFileFlow(name string, server string, port int, sourceFolder string, pattern string, destinations []string) FileFlow {
+	return FileFlow{
+		name,
+		server,
+		port,
+		sourceFolder,
+		pattern,
+		destinations,
+		regexp.MustCompile(pattern),
+	}
+}

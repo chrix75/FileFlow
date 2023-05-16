@@ -8,18 +8,20 @@ import (
 	"golang.org/x/crypto/ssh"
 	"log"
 	"os"
+	"time"
 )
 
 // FileFlow moves a file from one SFTP directory to another local one.
 // To work, a configuration file must be provided that describes all flows.
 // The configuration file format is described in the README.md.
 func main() {
-
-	//todo manage pattern
 	pattern := ".+2023"
-	flow := fileflows.FileFlow{Name: "Move ACME files", Server: "localhost", Port: 22, SourceFolder: "sftp/acme", Pattern: pattern, DestinationFolders: []string{"/Users/batman/sftp/moved"}}
+	flow := fileflows.NewFileFlow("Move ACME files", "localhost", 22, "sftp/acme", pattern, []string{"/Users/batman/sftp/moved"})
 
-	processFlow(flow, "/Users/batman/.ssh/test.sftp.privatekey.file")
+	for {
+		processFlow(flow, "/Users/batman/.ssh/test.sftp.privatekey.file")
+		time.Sleep(time.Second * 10)
+	}
 }
 
 func processFlow(flow fileflows.FileFlow, keyFile string) {
@@ -89,7 +91,7 @@ func files(flow fileflows.FileFlow, sc *sftp.Client) []os.FileInfo {
 	var files = make([]os.FileInfo, 0, 50)
 	for walker.Step() {
 		fileInfo := walker.Stat()
-		if !fileInfo.IsDir() {
+		if !fileInfo.IsDir() && flow.Regexp.MatchString(fileInfo.Name()) {
 			files = append(files, fileInfo)
 		}
 	}
