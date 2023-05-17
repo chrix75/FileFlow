@@ -3,9 +3,11 @@ package main
 import (
 	"FileFlow/dispatch"
 	"FileFlow/fileflows"
+	"compress/gzip"
 	"fmt"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
+	"io"
 	"io/fs"
 	"log"
 	"os"
@@ -68,26 +70,32 @@ func processFlow(flow fileflows.FileFlow, keyFile string) {
 	files := files(flow, sc)
 
 	var moveFile dispatch.Callback = func(src string, dst string) error {
-		tmpDst := dst + ".tmp"
 		log.Printf("INFO Moving %s to %s\n", src, dst)
+
 		inp, err := sc.Open(src)
 		if err != nil {
 			return err
 		}
 		defer inp.Close()
 
+		tmpDst := dst + ".tmp"
 		out, err := os.Create(tmpDst)
 		if err != nil {
 			return err
 		}
 
-		if _, err := inp.WriteTo(out); err != nil {
-			_ = out.Close()
+		err = compressFile(inp, out)
+		if err != nil {
 			return err
 		}
-
+		/*
+			err = copyFile(inp, out)
+			if err != nil {
+				return err
+			}
+		*/
 		_ = out.Close()
-		err = os.Rename(tmpDst, dst)
+		err = os.Rename(tmpDst, dst+".gz")
 		if err != nil {
 			return err
 		}
@@ -108,6 +116,25 @@ func processFlow(flow fileflows.FileFlow, keyFile string) {
 		}
 	}
 
+}
+
+func compressFile(inp fs.File, out *os.File) error {
+	zw := gzip.NewWriter(out)
+	defer zw.Close()
+
+	_, err := io.Copy(zw, inp)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+func copyFile(inp *sftp.File, out *os.File) error {
+	if _, err := inp.WriteTo(out); err != nil {
+		_ = out.Close()
+		return err
+	}
+	return nil
 }
 
 func sftpClient(client *ssh.Client) *sftp.Client {
