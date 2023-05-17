@@ -21,6 +21,7 @@ type FileFlow struct {
 	Pattern            string
 	DestinationFolders []string `yaml:"to"`
 	Regexp             *regexp.Regexp
+	MaxFileCount       int
 }
 
 // ReadConfiguration reads a config YAML and returns a FFConfig struct.
@@ -44,6 +45,7 @@ func ReadConfiguration(cfg string) (*FFConfig, error) {
 			pattern,
 			flow.DestinationFolders,
 			regexp.MustCompile(pattern),
+			flow.MaxFileCount,
 		}
 	}
 
@@ -84,7 +86,7 @@ func (f *FileFlow) destination(path string) string {
 	}
 	return ""
 }
-func NewFileFlow(name string, server string, port int, sourceFolder string, pattern string, destinations []string) FileFlow {
+func NewFileFlow(name string, server string, port int, sourceFolder string, pattern string, destinations []string, maxFileCount int) FileFlow {
 	return FileFlow{
 		name,
 		server,
@@ -93,5 +95,6 @@ func NewFileFlow(name string, server string, port int, sourceFolder string, patt
 		pattern,
 		destinations,
 		regexp.MustCompile(pattern),
+		maxFileCount,
 	}
 }

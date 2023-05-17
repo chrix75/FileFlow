@@ -20,8 +20,22 @@ func main() {
 	var wg sync.WaitGroup
 
 	wg.Add(2)
-	flowA := fileflows.NewFileFlow("Move ACME files", "localhost", 22, "sftp/acme", ".+", []string{"/Users/batman/sftp/moved", "/Users/batman/sftp/moved2"})
-	flowB := fileflows.NewFileFlow("Move Nexus files", "localhost", 22, "sftp/nexus", ".+", []string{"/Users/batman/sftp/moved", "/Users/batman/sftp/moved2"})
+	flowA := fileflows.NewFileFlow(
+		"Move ACME files",
+		"localhost",
+		22,
+		"sftp/acme",
+		".+",
+		[]string{"/Users/batman/sftp/moved", "/Users/batman/sftp/moved2"},
+		3)
+	flowB := fileflows.NewFileFlow(
+		"Move Nexus files",
+		"localhost",
+		22,
+		"sftp/nexus",
+		".+",
+		[]string{"/Users/batman/sftp/moved", "/Users/batman/sftp/moved2"},
+		3)
 
 	go func() {
 		defer wg.Done()
@@ -83,8 +97,7 @@ func processFlow(flow fileflows.FileFlow, keyFile string) {
 		return nil
 	}
 
-	//todo manage maxFileCount by FileFlow
-	aa := availabilityByFileCount{maxFileCount: 3}
+	aa := availabilityByFileCount{maxFileCount: flow.MaxFileCount}
 	dispatcher := dispatch.NewDispatcher(&flow, dispatch.FolderAvailability(aa), moveFile)
 	for _, f := range files {
 		dst, err := dispatcher.Dispatch(f.Name())
