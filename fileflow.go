@@ -100,7 +100,7 @@ func processFlow(flow fileflows.FileFlow, keyFile string) {
 
 		err = processFile(flow, inp, dst)
 		if err != nil {
-			return err
+			return fmt.Errorf("error processing file %s: %v", src, err)
 		}
 
 		_ = sc.Remove(src)
@@ -133,10 +133,10 @@ func processFile(flow fileflows.FileFlow, inp *sftp.File, dst string) error {
 		log.Printf("Moving %s to %s", inp.Name(), dst)
 		err = copyFile(inp, out)
 		if err != nil {
-			return err
+			return fmt.Errorf("error copying file %s to %s: %v", inp.Name(), tmpDst, err)
 		}
 		if err := os.Rename(tmpDst, dst); err != nil {
-			return err
+			return fmt.Errorf("error renaming file %s to %s: %v", tmpDst, dst, err)
 		}
 
 	} else if flow.Operation == fileflows.Compression {
@@ -144,20 +144,20 @@ func processFile(flow fileflows.FileFlow, inp *sftp.File, dst string) error {
 		log.Printf("Compressing %s to %s", inp.Name(), gzName)
 		err = compressFile(inp, out)
 		if err != nil {
-			return err
+			return fmt.Errorf("error compressing file %s to %s: %v", inp.Name(), tmpDst, err)
 		}
 		if err := os.Rename(tmpDst, gzName); err != nil {
-			return err
+			return fmt.Errorf("error renaming file %s to %s: %v", tmpDst, gzName, err)
 		}
 	} else if flow.Operation == fileflows.Decompression {
 		finalName := strings.Replace(dst, ".gz", "", 1)
 		log.Printf("Decompressing %s to %s", inp.Name(), finalName)
 		err = uncompressFile(inp, out)
 		if err != nil {
-			return err
+			return fmt.Errorf("error decompressing file %s to %s: %v", inp.Name(), tmpDst, err)
 		}
 		if err := os.Rename(tmpDst, finalName); err != nil {
-			return err
+			return fmt.Errorf("error renaming file %s to %s: %v", tmpDst, finalName, err)
 		}
 	}
 
@@ -208,6 +208,13 @@ func sftpClient(client *ssh.Client) *sftp.Client {
 }
 
 func files(flow fileflows.FileFlow, sc *sftp.Client) []os.FileInfo {
+	if _, err := sc.Lstat(flow.SourceFolder); err != nil {
+		if os.IsNotExist(err) {
+			log.Printf("WARN source folder %s does not exist", flow.SourceFolder)
+			return []os.FileInfo{}
+		}
+	}
+
 	walker := sc.Walk(flow.SourceFolder)
 	var files = make([]os.FileInfo, 0, 50)
 	for walker.Step() {
