@@ -104,6 +104,7 @@ func processFlow(flow fileflows.FileFlow, keyFile string) {
 		}
 
 		_ = sc.Remove(src)
+		log.Printf("Removed file %s", src)
 
 		return nil
 	}
@@ -113,7 +114,7 @@ func processFlow(flow fileflows.FileFlow, keyFile string) {
 	for _, f := range files {
 		dst, err := dispatcher.Dispatch(f.Name())
 		if err != nil {
-			log.Printf("WARN cannot move file %s to %s: %v", f.Name(), dst, err)
+			log.Printf("WARN cannot move file %s : %v", f.Name(), err)
 		} else {
 			log.Printf("DEBUG Moved file %s to %s", f.Name(), dst)
 		}
@@ -140,24 +141,34 @@ func processFile(flow fileflows.FileFlow, inp *sftp.File, dst string) error {
 		}
 
 	} else if flow.Operation == fileflows.Compression {
-		gzName := dst + ".gz"
-		log.Printf("Compressing %s to %s", inp.Name(), gzName)
-		err = compressFile(inp, out)
-		if err != nil {
-			return fmt.Errorf("error compressing file %s to %s: %v", inp.Name(), tmpDst, err)
-		}
-		if err := os.Rename(tmpDst, gzName); err != nil {
-			return fmt.Errorf("error renaming file %s to %s: %v", tmpDst, gzName, err)
+		if !strings.HasSuffix(inp.Name(), ".gz") {
+			gzName := dst + ".gz"
+			log.Printf("Compressing %s to %s", inp.Name(), gzName)
+			err = compressFile(inp, out)
+			if err != nil {
+				return fmt.Errorf("error compressing file %s to %s: %v", inp.Name(), tmpDst, err)
+			}
+			if err := os.Rename(tmpDst, gzName); err != nil {
+				return fmt.Errorf("error renaming file %s to %s: %v", tmpDst, gzName, err)
+			}
+		} else {
+			_ = os.Remove(tmpDst)
+			return fmt.Errorf("cannot compress file %s because it seems to be compressed already", inp.Name())
 		}
 	} else if flow.Operation == fileflows.Decompression {
-		finalName := strings.Replace(dst, ".gz", "", 1)
-		log.Printf("Decompressing %s to %s", inp.Name(), finalName)
-		err = uncompressFile(inp, out)
-		if err != nil {
-			return fmt.Errorf("error decompressing file %s to %s: %v", inp.Name(), tmpDst, err)
-		}
-		if err := os.Rename(tmpDst, finalName); err != nil {
-			return fmt.Errorf("error renaming file %s to %s: %v", tmpDst, finalName, err)
+		if strings.HasSuffix(inp.Name(), ".gz") {
+			finalName := strings.Replace(dst, ".gz", "", 1)
+			log.Printf("Decompressing %s to %s", inp.Name(), finalName)
+			err = uncompressFile(inp, out)
+			if err != nil {
+				return fmt.Errorf("error decompressing file %s to %s: %v", inp.Name(), tmpDst, err)
+			}
+			if err := os.Rename(tmpDst, finalName); err != nil {
+				return fmt.Errorf("error renaming file %s to %s: %v", tmpDst, finalName, err)
+			}
+		} else {
+			_ = os.Remove(tmpDst)
+			return fmt.Errorf("cannot uncompress file %s because it seems to be not compressed", inp.Name())
 		}
 	}
 
