@@ -17,6 +17,9 @@ var (
 
 // Integration test
 func TestMoveFileFromSftp(t *testing.T) {
+	// Given
+	assertFoldersAreEmpty()
+
 	sourceFile := createTextFile(localSftpFolder, "file.txt")
 	expectedResultFile := localDestFolder + "file.txt"
 	defer func() {
@@ -24,7 +27,6 @@ func TestMoveFileFromSftp(t *testing.T) {
 		_ = os.Remove(expectedResultFile)
 	}()
 
-	// Given
 	flow := fileflows.NewFileFlow(
 		"Move Nexus files",
 		"localhost",
@@ -52,6 +54,8 @@ func TestMoveFileFromSftp(t *testing.T) {
 
 // Integration test
 func TestCompressFileFromSftp(t *testing.T) {
+	assertFoldersAreEmpty()
+
 	sourceFile := createTextFile(localSftpFolder, "file.txt")
 	expectedResultFile := localDestFolder + "file.txt.gz"
 	defer func() {
@@ -87,6 +91,8 @@ func TestCompressFileFromSftp(t *testing.T) {
 
 // Integration test
 func TestCancelCompressFileFromSftp(t *testing.T) {
+	assertFoldersAreEmpty()
+
 	sourceFile := createGzipFile(localSftpFolder, "file.txt")
 	unexpectedResultFile := localDestFolder + "file.txt.gz.gz"
 	unexpectedTmpFile := localDestFolder + "file.txt.gz.tmp"
@@ -126,6 +132,8 @@ func TestCancelCompressFileFromSftp(t *testing.T) {
 
 // Integration test
 func TestUncompressFileFromSftp(t *testing.T) {
+	assertFoldersAreEmpty()
+
 	sourceFile := createGzipFile(localSftpFolder, "file.txt")
 	expectedResultFile := localDestFolder + "file.txt"
 	defer func() {
@@ -161,6 +169,8 @@ func TestUncompressFileFromSftp(t *testing.T) {
 
 // Integration test
 func TestCancelUncompressFileFromSftp(t *testing.T) {
+	assertFoldersAreEmpty()
+
 	sourceFile := createTextFile(localSftpFolder, "file.txt")
 	unexpectedResultFile := localDestFolder + "file.txt"
 	unexpectedTmpFile := localDestFolder + "file.txt.tmp"
@@ -243,4 +253,13 @@ func createGzipFile(folder string, fileName string) (filePath string) {
 	_ = os.Remove(name)
 
 	return gzipFileName
+}
+func assertFoldersAreEmpty() {
+	if countFiles(localSftpFolder) != 0 {
+		log.Fatal("Local sftp folder is not empty")
+	}
+
+	if countFiles(localDestFolder) != 0 {
+		log.Fatal("Local dest folder is not empty")
+	}
 }

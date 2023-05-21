@@ -272,9 +272,14 @@ func (a availabilityByFileCount) IsAvailable(folder string) bool {
 		return true
 	}
 
+	count := countFiles(folder)
+	return count > -1 && count < a.maxFileCount
+}
+
+func countFiles(folder string) int {
 	dir, err := fs.ReadDir(os.DirFS(folder), ".")
 	if err != nil {
-		return false
+		return -1
 	}
 
 	count := 0
@@ -284,5 +289,5 @@ func (a availabilityByFileCount) IsAvailable(folder string) bool {
 		}
 	}
 
-	return count < a.maxFileCount
+	return count
 }
