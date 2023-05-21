@@ -29,7 +29,9 @@ func main() {
 		"sftp/acme",
 		".+",
 		[]string{"/Users/batman/sftp/moved", "/Users/batman/sftp/moved2"},
+		fileflows.Compression,
 		3)
+
 	flowB := fileflows.NewFileFlow(
 		"Move Nexus files",
 		"localhost",
@@ -37,6 +39,7 @@ func main() {
 		"sftp/nexus",
 		".+",
 		[]string{"/Users/batman/sftp/moved", "/Users/batman/sftp/moved2"},
+		fileflows.Move,
 		3)
 
 	go func() {
@@ -70,32 +73,13 @@ func processFlow(flow fileflows.FileFlow, keyFile string) {
 	files := files(flow, sc)
 
 	var moveFile dispatch.Callback = func(src string, dst string) error {
-		log.Printf("INFO Moving %s to %s\n", src, dst)
-
 		inp, err := sc.Open(src)
 		if err != nil {
 			return err
 		}
 		defer inp.Close()
 
-		tmpDst := dst + ".tmp"
-		out, err := os.Create(tmpDst)
-		if err != nil {
-			return err
-		}
-
-		err = compressFile(inp, out)
-		if err != nil {
-			return err
-		}
-		/*
-			err = copyFile(inp, out)
-			if err != nil {
-				return err
-			}
-		*/
-		_ = out.Close()
-		err = os.Rename(tmpDst, dst+".gz")
+		err = processFile(flow, inp, dst)
 		if err != nil {
 			return err
 		}
@@ -116,6 +100,39 @@ func processFlow(flow fileflows.FileFlow, keyFile string) {
 		}
 	}
 
+}
+
+func processFile(flow fileflows.FileFlow, inp *sftp.File, dst string) error {
+	tmpDst := dst + ".tmp"
+	out, err := os.Create(tmpDst)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	if flow.Operation == fileflows.Move {
+		log.Printf("Moving %s to %s", inp.Name(), dst)
+		err = copyFile(inp, out)
+		if err != nil {
+			return err
+		}
+		if err := os.Rename(tmpDst, dst); err != nil {
+			return err
+		}
+
+	} else if flow.Operation == fileflows.Compression {
+		gzName := dst + ".gz"
+		log.Printf("Compressing %s to %s", inp.Name(), gzName)
+		err = compressFile(inp, out)
+		if err != nil {
+			return err
+		}
+		if err := os.Rename(tmpDst, gzName); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func compressFile(inp fs.File, out *os.File) error {

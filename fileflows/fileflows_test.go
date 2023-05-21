@@ -104,7 +104,9 @@ file_flows:
 func TestDestinationFound(t *testing.T) {
 	// Given
 	pattern := ".+"
-	flow := FileFlow{"Move ACME files", "localhost", 22, "sftp/acme", pattern, []string{"/dest"}, regexp.MustCompile(pattern), 0}
+	flow := FileFlow{"Move ACME files",
+		"localhost", 22, "sftp/acme", pattern,
+		[]string{"/dest"}, regexp.MustCompile(pattern), Move, 0}
 
 	// When
 	d := flow.destination("file_A")
@@ -122,7 +124,8 @@ func TestDestinationFound(t *testing.T) {
 func TestDestinationNotFound(t *testing.T) {
 	// Given
 	pattern := "foo_.+"
-	flow := FileFlow{"Move ACME files", "localhost", 22, "sftp/acme", pattern, []string{"/dest"}, regexp.MustCompile(pattern), 0}
+	flow := FileFlow{"Move ACME files", "localhost", 22, "sftp/acme", pattern,
+		[]string{"/dest"}, regexp.MustCompile(pattern), Move, 0}
 
 	// When
 	d := flow.destination("file_A")

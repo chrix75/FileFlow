@@ -7,6 +7,14 @@ import (
 	"regexp"
 )
 
+type FlowOperation int
+
+const (
+	Move = iota
+	Compression
+	Decompression
+)
+
 // FFConfig is the presentation of all flows defined in the config YAML file.
 type FFConfig struct {
 	FileFlows []FileFlow `yaml:"file_flows"`
@@ -21,6 +29,7 @@ type FileFlow struct {
 	Pattern            string
 	DestinationFolders []string `yaml:"to"`
 	Regexp             *regexp.Regexp
+	Operation          FlowOperation
 	MaxFileCount       int
 }
 
@@ -45,6 +54,7 @@ func ReadConfiguration(cfg string) (*FFConfig, error) {
 			pattern,
 			flow.DestinationFolders,
 			regexp.MustCompile(pattern),
+			flow.Operation,
 			flow.MaxFileCount,
 		}
 	}
@@ -86,7 +96,13 @@ func (f *FileFlow) destination(path string) string {
 	}
 	return ""
 }
-func NewFileFlow(name string, server string, port int, sourceFolder string, pattern string, destinations []string, maxFileCount int) FileFlow {
+func NewFileFlow(name string,
+	server string, port int,
+	sourceFolder string, pattern string,
+	destinations []string,
+	operation FlowOperation,
+	maxFileCount int) FileFlow {
+
 	return FileFlow{
 		name,
 		server,
@@ -95,6 +111,7 @@ func NewFileFlow(name string, server string, port int, sourceFolder string, patt
 		pattern,
 		destinations,
 		regexp.MustCompile(pattern),
+		operation,
 		maxFileCount,
 	}
 }
