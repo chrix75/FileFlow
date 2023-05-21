@@ -11,6 +11,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -42,6 +43,16 @@ func main() {
 		fileflows.Move,
 		3)
 
+	flowC := fileflows.NewFileFlow(
+		"Move LexCorp files",
+		"localhost",
+		22,
+		"sftp/lexcorp",
+		".+",
+		[]string{"/Users/batman/sftp/moved", "/Users/batman/sftp/moved2"},
+		fileflows.Decompression,
+		3)
+
 	go func() {
 		defer wg.Done()
 		for {
@@ -54,6 +65,14 @@ func main() {
 		defer wg.Done()
 		for {
 			processFlow(flowB, "/Users/batman/.ssh/test.sftp.privatekey.file")
+			time.Sleep(time.Second * 10)
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		for {
+			processFlow(flowC, "/Users/batman/.ssh/test.sftp.privatekey.file")
 			time.Sleep(time.Second * 10)
 		}
 	}()
@@ -130,6 +149,16 @@ func processFile(flow fileflows.FileFlow, inp *sftp.File, dst string) error {
 		if err := os.Rename(tmpDst, gzName); err != nil {
 			return err
 		}
+	} else if flow.Operation == fileflows.Decompression {
+		finalName := strings.Replace(dst, ".gz", "", 1)
+		log.Printf("Decompressing %s to %s", inp.Name(), finalName)
+		err = uncompressFile(inp, out)
+		if err != nil {
+			return err
+		}
+		if err := os.Rename(tmpDst, finalName); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -146,6 +175,22 @@ func compressFile(inp fs.File, out *os.File) error {
 
 	return nil
 }
+
+func uncompressFile(inp fs.File, out *os.File) error {
+	r, err := gzip.NewReader(inp)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+
+	_, err = io.Copy(out, r)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func copyFile(inp *sftp.File, out *os.File) error {
 	if _, err := inp.WriteTo(out); err != nil {
 		_ = out.Close()
