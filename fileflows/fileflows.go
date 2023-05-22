@@ -31,6 +31,7 @@ type FileFlow struct {
 	Regexp             *regexp.Regexp
 	Operation          FlowOperation
 	MaxFileCount       int
+	OverflowFolder     string
 }
 
 // ReadConfiguration reads a config YAML and returns a FFConfig struct.
@@ -56,6 +57,7 @@ func ReadConfiguration(cfg string) (*FFConfig, error) {
 			regexp.MustCompile(pattern),
 			flow.Operation,
 			flow.MaxFileCount,
+			flow.OverflowFolder,
 		}
 	}
 
@@ -101,7 +103,8 @@ func NewFileFlow(name string,
 	sourceFolder string, pattern string,
 	destinations []string,
 	operation FlowOperation,
-	maxFileCount int) FileFlow {
+	maxFileCount int,
+	overflowFolder string) FileFlow {
 
 	return FileFlow{
 		name,
@@ -113,5 +116,6 @@ func NewFileFlow(name string,
 		regexp.MustCompile(pattern),
 		operation,
 		maxFileCount,
+		overflowFolder,
 	}
 }

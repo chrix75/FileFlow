@@ -4,13 +4,16 @@ package dispatch
 import (
 	"FileFlow/fileflows"
 	"fmt"
+	"io"
+	"os"
+	"path"
 	"strings"
 )
 
 // Dispatcher contains data and functions for dispatching files into different folders.
 type Dispatcher struct {
-	flow               *fileflows.FileFlow
-	callback           Callback
+	flow *fileflows.FileFlow
+	FileProcessor
 	dstOffset          int
 	folderAvailability FolderAvailability
 }
@@ -46,10 +49,10 @@ type FolderAvailability interface {
 //	var mock FolderAvailability = new(mockAlwaysTrueFolderAvailability)
 //
 //	dispatcher := NewDispatcher(&flow, mock, callback)
-func NewDispatcher(flow *fileflows.FileFlow, fa FolderAvailability, callback Callback) *Dispatcher {
+func NewDispatcher(flow *fileflows.FileFlow, fa FolderAvailability, processor SFTPFileProcessor) *Dispatcher {
 	return &Dispatcher{
 		flow,
-		callback,
+		processor,
 		0,
 		fa,
 	}
@@ -100,7 +103,7 @@ func (d *Dispatcher) tryDispatch(fileName string) (string, error) {
 	folder := d.flow.DestinationFolders[d.dstOffset]
 	if d.folderAvailability.IsAvailable(folder) {
 		dst := ConcatFolderWithFile(folder, fileName)
-		if err := d.callback(src, dst); err != nil {
+		if err := d.ProcessFile(src, dst, d.flow.Operation); err != nil {
 			return "", err
 		}
 
@@ -112,5 +115,39 @@ func (d *Dispatcher) tryDispatch(fileName string) (string, error) {
 		return dst, nil
 	}
 
+	if d.flow.OverflowFolder != "" {
+		dst, err := d.OverflowFile(src, d.flow.OverflowFolder)
+		if err != nil {
+			return "", fmt.Errorf("move to overflow folder: %w failed", err)
+		}
+
+		return dst, nil
+	}
+
 	return "", nil
+}
+
+func moveFile(folder string, filePath string) (dst string, err error) {
+	src := path.Base(filePath)
+	dst = ConcatFolderWithFile(folder, src)
+	w, err := os.Create(dst)
+	if err != nil {
+		return "", err
+	}
+	defer w.Close()
+	r, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer r.Close()
+	_, err = io.Copy(w, r)
+	if err != nil {
+		return "", err
+	}
+
+	err = os.Remove(filePath)
+	if err != nil {
+		return "", err
+	}
+	return dst, nil
 }

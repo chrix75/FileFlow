@@ -10,9 +10,12 @@ import (
 )
 
 var (
-	localSftpFolder    = "/Users/batman/sftp/tests/input/"
-	localDestFolder    = "/Users/batman/sftp/tests/output/"
-	sftpPrivateKeyFile = "/Users/batman/.ssh/test.sftp.privatekey.file"
+	localSftpFolder     = "/Users/batman/sftp/tests/input/"
+	localDestFolder     = "/Users/batman/sftp/tests/output/"
+	localOverflowFolder = "/Users/batman/sftp/tests/overflow/"
+	sftpPrivateKeyFile  = "/Users/batman/.ssh/test.sftp.privatekey.file"
+
+	remoteInputSftpFolder = "sftp/tests/input/"
 )
 
 // Integration test
@@ -35,7 +38,8 @@ func TestMoveFileFromSftp(t *testing.T) {
 		".+",
 		[]string{localDestFolder},
 		fileflows.Move,
-		3)
+		3,
+		"")
 
 	// When
 	processFlow(flow, sftpPrivateKeyFile)
@@ -72,7 +76,8 @@ func TestCompressFileFromSftp(t *testing.T) {
 		".+",
 		[]string{localDestFolder},
 		fileflows.Compression,
-		3)
+		3,
+		"")
 
 	// When
 	processFlow(flow, sftpPrivateKeyFile)
@@ -111,7 +116,8 @@ func TestCancelCompressFileFromSftp(t *testing.T) {
 		".+",
 		[]string{localDestFolder},
 		fileflows.Compression,
-		3)
+		3,
+		"")
 
 	// When
 	processFlow(flow, sftpPrivateKeyFile)
@@ -150,7 +156,8 @@ func TestUncompressFileFromSftp(t *testing.T) {
 		".+",
 		[]string{localDestFolder},
 		fileflows.Decompression,
-		3)
+		3,
+		"")
 
 	// When
 	processFlow(flow, sftpPrivateKeyFile)
@@ -189,7 +196,8 @@ func TestCancelUncompressFileFromSftp(t *testing.T) {
 		".+",
 		[]string{localDestFolder},
 		fileflows.Decompression,
-		3)
+		3,
+		"")
 
 	// When
 	processFlow(flow, sftpPrivateKeyFile)
@@ -205,6 +213,50 @@ func TestCancelUncompressFileFromSftp(t *testing.T) {
 
 	if _, err := os.Stat(sourceFile); err != nil {
 		t.Errorf("File should be found: %s", sourceFile)
+	}
+}
+
+// Integration test
+func TestMoveToOverflowDir(t *testing.T) {
+	assertFoldersAreEmpty()
+
+	sourceFile := createTextFile(localSftpFolder, "file.txt")
+	unexpectedResultFile := localDestFolder + "file.txt"
+	expectedOverflowFile := localOverflowFolder + "file.txt"
+	alreadyExistFile := createTextFile(localDestFolder, "other.txt")
+	defer func() {
+		_ = os.Remove(sourceFile)
+		_ = os.Remove(unexpectedResultFile)
+		_ = os.Remove(expectedOverflowFile)
+		_ = os.Remove(alreadyExistFile)
+	}()
+
+	// Given
+	flow := fileflows.NewFileFlow(
+		"Move Nexus files",
+		"localhost",
+		22,
+		remoteInputSftpFolder,
+		".+",
+		[]string{localDestFolder},
+		fileflows.Move,
+		1,
+		localOverflowFolder)
+
+	// When
+	processFlow(flow, sftpPrivateKeyFile)
+
+	// Then
+	if _, err := os.Stat(unexpectedResultFile); err == nil {
+		t.Errorf("File should not be found: %s", unexpectedResultFile)
+	}
+
+	if _, err := os.Stat(sourceFile); err == nil {
+		t.Errorf("File should not be present: %s", sourceFile)
+	}
+
+	if _, err := os.Stat(expectedOverflowFile); err != nil {
+		t.Errorf("File should be present: %s", expectedOverflowFile)
 	}
 }
 
