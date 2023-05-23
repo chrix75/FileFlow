@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"sort"
 )
 
 type SFTPFileProcessor struct {
@@ -37,7 +38,7 @@ func Connect(flow fileflows.FileFlow, keyFile string) SFTPFileProcessor {
 }
 
 // ListFiles list the files in the given directory that match the given pattern of the flow
-func (p SFTPFileProcessor) ListFiles(flow fileflows.FileFlow) []os.FileInfo {
+func (p SFTPFileProcessor) ListFiles(flow fileflows.FileFlow) FileList {
 	if _, err := p.sftp.Lstat(flow.SourceFolder); err != nil {
 		if os.IsNotExist(err) {
 			log.Printf("WARN source folder %s does not exist", flow.SourceFolder)
@@ -46,13 +47,14 @@ func (p SFTPFileProcessor) ListFiles(flow fileflows.FileFlow) []os.FileInfo {
 	}
 
 	walker := p.sftp.Walk(flow.SourceFolder)
-	var files = make([]os.FileInfo, 0, 50)
+	var files = make(FileList, 0, 50)
 	for walker.Step() {
 		fileInfo := walker.Stat()
 		if !fileInfo.IsDir() && flow.Regexp.MatchString(fileInfo.Name()) {
 			files = append(files, fileInfo)
 		}
 	}
+	sort.Sort(files)
 	return files
 }
 

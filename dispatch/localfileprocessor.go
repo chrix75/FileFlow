@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"sort"
 )
 
 type LocalFileProcessor struct {
@@ -25,7 +26,7 @@ func Open(flow fileflows.FileFlow) LocalFileProcessor {
 }
 
 // ListFiles list the files in the given directory that match the given pattern of the flow
-func (p LocalFileProcessor) ListFiles(flow fileflows.FileFlow) []os.FileInfo {
+func (p LocalFileProcessor) ListFiles(flow fileflows.FileFlow) FileList {
 	if p.sourceFolder != flow.SourceFolder {
 		log.Fatal("source folder of the current processor does not match the flow source folder")
 	}
@@ -38,13 +39,15 @@ func (p LocalFileProcessor) ListFiles(flow fileflows.FileFlow) []os.FileInfo {
 	}
 
 	walker := fs.Walk(p.sourceFolder)
-	var files = make([]os.FileInfo, 0, 50)
+	var files = make(FileList, 0, 50)
 	for walker.Step() {
 		fileInfo := walker.Stat()
 		if !fileInfo.IsDir() && flow.Regexp.MatchString(fileInfo.Name()) {
 			files = append(files, fileInfo)
 		}
 	}
+
+	sort.Sort(files)
 	return files
 }
 

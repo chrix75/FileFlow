@@ -27,7 +27,21 @@ type FileProcessor interface {
 	OverflowFile(src, overflowFolder string) (dst string, err error)
 
 	// ListFiles list all the files in the flow's source directory
-	ListFiles(flow fileflows.FileFlow) []os.FileInfo
+	ListFiles(flow fileflows.FileFlow) FileList
+}
+
+type FileList []os.FileInfo
+
+func (fl FileList) Len() int {
+	return len(fl)
+}
+
+func (fl FileList) Swap(i, j int) {
+	fl[i], fl[j] = fl[j], fl[i]
+}
+
+func (fl FileList) Less(i, j int) bool {
+	return fl[i].Name() < fl[j].Name()
 }
 
 func uncompressOperation(src, dst string, inp fs.File) error {
