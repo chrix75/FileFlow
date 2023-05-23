@@ -98,6 +98,11 @@ func (f *FileFlow) destination(path string) string {
 	}
 	return ""
 }
+
+func (f *FileFlow) IsRemote() bool {
+	return f.Port > 0
+}
+
 func NewFileFlow(name string,
 	server string, port int,
 	sourceFolder string, pattern string,
@@ -117,5 +122,23 @@ func NewFileFlow(name string,
 		operation,
 		maxFileCount,
 		overflowFolder,
+	}
+}
+
+func NewLocalFileFlow(name, sourceFolder, pattern string,
+	destinations []string,
+	operation FlowOperation,
+	maxFileCount int,
+	overflowFolder string) FileFlow {
+
+	return FileFlow{
+		Name:               name,
+		SourceFolder:       sourceFolder,
+		Pattern:            pattern,
+		DestinationFolders: destinations,
+		Regexp:             regexp.MustCompile(pattern),
+		Operation:          operation,
+		MaxFileCount:       maxFileCount,
+		OverflowFolder:     overflowFolder,
 	}
 }

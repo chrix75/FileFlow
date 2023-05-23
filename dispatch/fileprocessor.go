@@ -22,6 +22,9 @@ type FileProcessor interface {
 	// OverflowFile move a file to the overflow directory
 	// src parameter is the full path of the file to move
 	OverflowFile(src, overflowFolder string) (dst string, err error)
+
+	// ListFiles list all the files in the flow's source directory
+	ListFiles(flow fileflows.FileFlow) []os.FileInfo
 }
 
 func compressFile(inp fs.File, out *os.File) error {

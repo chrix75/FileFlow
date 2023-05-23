@@ -305,6 +305,46 @@ func TestMoveToOverflowDirWhileItIsNotEmpty(t *testing.T) {
 	}
 }
 
+// Integration test
+func TestMoveFromLocalDir(t *testing.T) {
+	assertFoldersAreEmpty()
+
+	sourceFile := createTextFile(localOverflowFolder, "file.txt")
+	expectedResultFile := localDestFolder + "file.txt"
+	unexpectedLocalFile := createTextFile(localOverflowFolder, "file.txt")
+	defer func() {
+		_ = os.Remove(sourceFile)
+		_ = os.Remove(expectedResultFile)
+		_ = os.Remove(unexpectedLocalFile)
+	}()
+
+	// Given
+	flow := fileflows.NewLocalFileFlow(
+		"Move Nexus files",
+		localOverflowFolder,
+		".+",
+		[]string{localDestFolder},
+		fileflows.Move,
+		1,
+		"")
+
+	// When
+	processFlow(flow, sftpPrivateKeyFile)
+
+	// Then
+	if _, err := os.Stat(unexpectedLocalFile); err == nil {
+		t.Errorf("File should not be found: %s", unexpectedLocalFile)
+	}
+
+	if _, err := os.Stat(sourceFile); err == nil {
+		t.Errorf("File should not be present: %s", sourceFile)
+	}
+
+	if _, err := os.Stat(expectedResultFile); err != nil {
+		t.Errorf("File should be present: %s", expectedResultFile)
+	}
+}
+
 func createTextFile(folder string, fileName string) (filePath string) {
 	name := folder + fileName
 	file, err := os.Create(name)

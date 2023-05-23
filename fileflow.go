@@ -77,9 +77,15 @@ func main() {
 }
 
 func processFlow(flow fileflows.FileFlow, keyFile string) {
-	processor := dispatch.Connect(flow, keyFile)
-	defer processor.Close()
-	log.Printf("Connected to server SFTP for flow %s", flow.Name)
+	var processor dispatch.FileProcessor
+	if flow.IsRemote() {
+		remote := dispatch.Connect(flow, keyFile)
+		defer remote.Close()
+		processor = remote
+		log.Printf("Connected to server SFTP for flow %s", flow.Name)
+	} else {
+		processor = dispatch.Open(flow)
+	}
 
 	allFiles := processor.ListFiles(flow)
 

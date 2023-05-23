@@ -47,7 +47,7 @@ type FolderAvailability interface {
 //	var mock FolderAvailability = new(mockAlwaysTrueFolderAvailability)
 //
 //	dispatcher := NewDispatcher(&flow, mock, callback)
-func NewDispatcher(flow *fileflows.FileFlow, fa FolderAvailability, processor SFTPFileProcessor) *Dispatcher {
+func NewDispatcher(flow *fileflows.FileFlow, fa FolderAvailability, processor FileProcessor) *Dispatcher {
 	return &Dispatcher{
 		flow,
 		processor,
