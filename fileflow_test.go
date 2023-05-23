@@ -212,6 +212,42 @@ func TestUncompressFileFromSftp(t *testing.T) {
 }
 
 // Integration test
+func TestUncompressFileFromLocal(t *testing.T) {
+	assertFoldersAreEmpty()
+
+	sourceFile := createGzipFile(localSftpFolder, "file.txt")
+	expectedResultFile := localDestFolder + "file.txt"
+	defer func() {
+		_ = os.Remove(sourceFile)
+		_ = os.Remove(expectedResultFile)
+	}()
+
+	// Given
+	flow := fileflows.NewLocalFileFlow(
+		"Move Nexus files",
+		localSftpFolder,
+		".+",
+		[]string{localDestFolder},
+		fileflows.Decompression,
+		3,
+		"")
+
+	// When
+	processFlow(flow, sftpPrivateKeyFile)
+
+	// Then
+	if _, err := os.Stat(expectedResultFile); err != nil {
+		if os.IsNotExist(err) {
+			t.Errorf("File should be found: %s", expectedResultFile)
+		}
+	}
+
+	if _, err := os.Stat(sourceFile); err == nil {
+		t.Errorf("File should not be found: %s", sourceFile)
+	}
+}
+
+// Integration test
 func TestCancelUncompressFileFromSftp(t *testing.T) {
 	assertFoldersAreEmpty()
 
