@@ -81,11 +81,11 @@ func processFlow(flow fileflows.FileFlow, keyFile string) {
 	defer processor.Close()
 	log.Printf("Connected to server SFTP for flow %s", flow.Name)
 
-	files := processor.ListFiles(flow)
+	allFiles := processor.ListFiles(flow)
 
 	aa := availabilityByFileCount{maxFileCount: flow.MaxFileCount}
 	dispatcher := dispatch.NewDispatcher(&flow, dispatch.FolderAvailability(aa), processor)
-	for _, f := range files {
+	for _, f := range allFiles {
 		dst, err := dispatcher.Dispatch(f.Name())
 		if err != nil {
 			log.Printf("WARN cannot move file %s : %v", f.Name(), err)
