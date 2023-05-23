@@ -22,30 +22,17 @@ func main() {
 		22,
 		"sftp/acme",
 		".+",
-		[]string{"/Users/batman/sftp/moved", "/Users/batman/sftp/moved2"},
-		fileflows.Compression,
-		3,
-		"")
-
-	flowB := fileflows.NewFileFlow(
-		"Move Nexus files",
-		"localhost",
-		22,
-		"sftp/nexus",
-		".+",
-		[]string{"/Users/batman/sftp/moved", "/Users/batman/sftp/moved2"},
+		[]string{"/Users/batman/sftp/moved"},
 		fileflows.Move,
 		3,
-		"")
+		"/Users/batman/sftp/overflow")
 
-	flowC := fileflows.NewFileFlow(
-		"Move LexCorp files",
-		"localhost",
-		22,
-		"sftp/lexcorp",
+	flowB := fileflows.NewLocalFileFlow(
+		"Move from ACME overflow folder",
+		"/Users/batman/sftp/overflow",
 		".+",
-		[]string{"/Users/batman/sftp/moved", "/Users/batman/sftp/moved2"},
-		fileflows.Decompression,
+		[]string{"/Users/batman/sftp/moved"},
+		fileflows.Move,
 		3,
 		"")
 
@@ -65,14 +52,6 @@ func main() {
 		}
 	}()
 
-	go func() {
-		defer wg.Done()
-		for {
-			processFlow(flowC, "/Users/batman/.ssh/test.sftp.privatekey.file")
-			time.Sleep(time.Second * 10)
-		}
-	}()
-
 	wg.Wait()
 }
 
@@ -85,6 +64,7 @@ func processFlow(flow fileflows.FileFlow, keyFile string) {
 		log.Printf("Connected to server SFTP for flow %s", flow.Name)
 	} else {
 		processor = dispatch.Open(flow)
+		log.Printf("Start local reading for flow %s", flow.Name)
 	}
 
 	allFiles := processor.ListFiles(flow)
