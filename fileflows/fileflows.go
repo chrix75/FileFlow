@@ -131,6 +131,10 @@ func NewLocalFileFlow(name, sourceFolder, pattern string,
 	maxFileCount int,
 	overflowFolder string) FileFlow {
 
+	if len(destinations) > 1 && overflowFolder != "" {
+		log.Fatal("Overflow folder cannot be specified with multiple destinations")
+	}
+
 	return FileFlow{
 		Name:               name,
 		SourceFolder:       sourceFolder,
