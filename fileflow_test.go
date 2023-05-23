@@ -269,7 +269,7 @@ func createTextFile(folder string, fileName string) (filePath string) {
 
 	defer file.Close()
 
-	file.WriteString("This is a test file.\n")
+	_, _ = file.WriteString("This is a test file.\n")
 
 	log.Printf("Created file: %s", name)
 
