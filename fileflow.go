@@ -3,9 +3,8 @@ package main
 import (
 	"FileFlow/dispatch"
 	"FileFlow/fileflows"
-	"io/fs"
+	"FileFlow/files"
 	"log"
-	"os"
 	"sync"
 	"time"
 )
@@ -106,22 +105,6 @@ func (a availabilityByFileCount) IsAvailable(folder string) bool {
 		return true
 	}
 
-	count := countFiles(folder)
+	count := files.CountFiles(folder)
 	return count > -1 && count < a.maxFileCount
-}
-
-func countFiles(folder string) int {
-	dir, err := fs.ReadDir(os.DirFS(folder), ".")
-	if err != nil {
-		return -1
-	}
-
-	count := 0
-	for _, file := range dir {
-		if file.Type().IsRegular() {
-			count++
-		}
-	}
-
-	return count
 }

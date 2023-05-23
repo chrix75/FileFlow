@@ -3,10 +3,8 @@ package dispatch
 
 import (
 	"FileFlow/fileflows"
+	"FileFlow/files"
 	"fmt"
-	"io"
-	"os"
-	"path"
 	"strings"
 )
 
@@ -101,7 +99,7 @@ func (d *Dispatcher) tryDispatch(fileName string) (string, error) {
 	src := ConcatFolderWithFile(d.flow.SourceFolder, fileName)
 
 	folder := d.flow.DestinationFolders[d.dstOffset]
-	if d.folderAvailability.IsAvailable(folder) {
+	if overflowFolderIsEmpty(d.flow.OverflowFolder) && d.folderAvailability.IsAvailable(folder) {
 		dst := ConcatFolderWithFile(folder, fileName)
 		if err := d.ProcessFile(src, dst, d.flow.Operation); err != nil {
 			return "", err
@@ -127,27 +125,9 @@ func (d *Dispatcher) tryDispatch(fileName string) (string, error) {
 	return "", nil
 }
 
-func moveFile(folder string, filePath string) (dst string, err error) {
-	src := path.Base(filePath)
-	dst = ConcatFolderWithFile(folder, src)
-	w, err := os.Create(dst)
-	if err != nil {
-		return "", err
+func overflowFolderIsEmpty(folder string) bool {
+	if folder == "" {
+		return true
 	}
-	defer w.Close()
-	r, err := os.Open(filePath)
-	if err != nil {
-		return "", err
-	}
-	defer r.Close()
-	_, err = io.Copy(w, r)
-	if err != nil {
-		return "", err
-	}
-
-	err = os.Remove(filePath)
-	if err != nil {
-		return "", err
-	}
-	return dst, nil
+	return files.CountFiles(folder) == 0
 }

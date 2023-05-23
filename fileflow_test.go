@@ -2,6 +2,7 @@ package main
 
 import (
 	"FileFlow/fileflows"
+	"FileFlow/files"
 	"compress/gzip"
 	"io"
 	"log"
@@ -260,6 +261,50 @@ func TestMoveToOverflowDir(t *testing.T) {
 	}
 }
 
+// Integration test
+func TestMoveToOverflowDirWhileItIsNotEmpty(t *testing.T) {
+	assertFoldersAreEmpty()
+
+	sourceFile := createTextFile(localSftpFolder, "file.txt")
+	unexpectedResultFile := localDestFolder + "file.txt"
+	expectedOverflowFile := localOverflowFolder + "file.txt"
+	alreadyExistFile := createTextFile(localOverflowFolder, "other.txt")
+	defer func() {
+		_ = os.Remove(sourceFile)
+		_ = os.Remove(unexpectedResultFile)
+		_ = os.Remove(expectedOverflowFile)
+		_ = os.Remove(alreadyExistFile)
+	}()
+
+	// Given
+	flow := fileflows.NewFileFlow(
+		"Move Nexus files",
+		"localhost",
+		22,
+		remoteInputSftpFolder,
+		".+",
+		[]string{localDestFolder},
+		fileflows.Move,
+		1,
+		localOverflowFolder)
+
+	// When
+	processFlow(flow, sftpPrivateKeyFile)
+
+	// Then
+	if _, err := os.Stat(unexpectedResultFile); err == nil {
+		t.Errorf("File should not be found: %s", unexpectedResultFile)
+	}
+
+	if _, err := os.Stat(sourceFile); err == nil {
+		t.Errorf("File should not be present: %s", sourceFile)
+	}
+
+	if _, err := os.Stat(expectedOverflowFile); err != nil {
+		t.Errorf("File should be present: %s", expectedOverflowFile)
+	}
+}
+
 func createTextFile(folder string, fileName string) (filePath string) {
 	name := folder + fileName
 	file, err := os.Create(name)
@@ -307,11 +352,11 @@ func createGzipFile(folder string, fileName string) (filePath string) {
 	return gzipFileName
 }
 func assertFoldersAreEmpty() {
-	if countFiles(localSftpFolder) != 0 {
+	if files.CountFiles(localSftpFolder) != 0 {
 		log.Fatal("Local sftp folder is not empty")
 	}
 
-	if countFiles(localDestFolder) != 0 {
+	if files.CountFiles(localDestFolder) != 0 {
 		log.Fatal("Local dest folder is not empty")
 	}
 }
