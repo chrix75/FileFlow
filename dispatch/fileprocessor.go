@@ -35,11 +35,16 @@ type SFTPFileProcessor struct {
 	sftp   *sftp.Client
 }
 
+// Close all resources about SFTP connection
+// This method should be defered.
 func (p SFTPFileProcessor) Close() {
 	p.client.Close()
 	p.sftp.Close()
 }
 
+// Connect to SFTP server and returns a SFTPFileProcessor for the provided flow.
+// flow parameter is the FileFlow description
+// keyFile est the private key file path for the SFTP connection
 func Connect(flow fileflows.FileFlow, keyFile string) SFTPFileProcessor {
 	client := sshClient(flow, keyFile)
 	sc := sftpClient(client)
@@ -51,6 +56,7 @@ func Connect(flow fileflows.FileFlow, keyFile string) SFTPFileProcessor {
 	return processor
 }
 
+// ListFiles list the files in the given directory that match the given pattern of the flow
 func (p SFTPFileProcessor) ListFiles(flow fileflows.FileFlow) []os.FileInfo {
 	if _, err := p.sftp.Lstat(flow.SourceFolder); err != nil {
 		if os.IsNotExist(err) {
@@ -70,6 +76,12 @@ func (p SFTPFileProcessor) ListFiles(flow fileflows.FileFlow) []os.FileInfo {
 	return files
 }
 
+// ProcessFile do an action on a file from a SFTP server.
+// src parameter is the source full file path in the SFTP server
+// dst parameter is the destination full file path in local filesystem
+// operation parameter is the operation to do
+//
+// After the operation is done, the file is moved to the destination folder (so, the file on the SFTP server is removed)
 func (p SFTPFileProcessor) ProcessFile(src string, dst string, operation fileflows.FlowOperation) error {
 	tmpDst := dst + ".tmp"
 	out, err := os.Create(tmpDst)
@@ -132,6 +144,8 @@ func (p SFTPFileProcessor) ProcessFile(src string, dst string, operation fileflo
 	return nil
 }
 
+// OverflowFile move a file from SFTP to the overflow directory.
+// If success, dst contains the full path of the file in the local filesystem.
 func (p SFTPFileProcessor) OverflowFile(src string, overflowFolder string) (dst string, err error) {
 	inp, err := p.sftp.Open(src)
 	if err != nil {
@@ -155,7 +169,7 @@ func (p SFTPFileProcessor) OverflowFile(src string, overflowFolder string) (dst 
 		return "", fmt.Errorf("error renaming file %s to %s: %v", tmp, dst, err)
 	}
 
-	p.sftp.Remove(src)
+	_ = p.sftp.Remove(src)
 	return dst, nil
 }
 
