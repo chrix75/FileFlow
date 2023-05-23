@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"path"
-	"strings"
 )
 
 type LocalFileProcessor struct {
@@ -54,12 +53,6 @@ func (p LocalFileProcessor) ListFiles(flow fileflows.FileFlow) []os.FileInfo {
 // dst parameter is the destination full file path
 // operation parameter is the operation to do
 func (p LocalFileProcessor) ProcessFile(src string, dst string, operation fileflows.FlowOperation) error {
-	tmpDst := dst + ".tmp"
-	out, err := os.Create(tmpDst)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
 
 	inp, err := os.Open(src)
 	if err != nil {
@@ -68,6 +61,12 @@ func (p LocalFileProcessor) ProcessFile(src string, dst string, operation filefl
 	defer inp.Close()
 
 	if operation == fileflows.Move {
+		tmpDst := dst + ".tmp"
+		out, err := os.Create(tmpDst)
+		if err != nil {
+			return err
+		}
+		defer out.Close()
 		log.Printf("Moving %s to %s", src, dst)
 		_, err = io.Copy(out, inp)
 		if err != nil {
@@ -78,34 +77,12 @@ func (p LocalFileProcessor) ProcessFile(src string, dst string, operation filefl
 		}
 
 	} else if operation == fileflows.Compression {
-		if !strings.HasSuffix(src, ".gz") {
-			gzName := dst + ".gz"
-			log.Printf("Compressing %s to %s", src, gzName)
-			err = compressFile(inp, out)
-			if err != nil {
-				return fmt.Errorf("error compressing file %s to %s: %v", src, tmpDst, err)
-			}
-			if err := os.Rename(tmpDst, gzName); err != nil {
-				return fmt.Errorf("error renaming file %s to %s: %v", tmpDst, gzName, err)
-			}
-		} else {
-			_ = os.Remove(tmpDst)
-			return fmt.Errorf("cannot compress file %s because it seems to be compressed already", src)
+		if err := compressOperation(src, dst, inp); err != nil {
+			return err
 		}
 	} else if operation == fileflows.Decompression {
-		if strings.HasSuffix(src, ".gz") {
-			finalName := strings.Replace(dst, ".gz", "", 1)
-			log.Printf("Decompressing %s to %s", src, finalName)
-			err = uncompressFile(inp, out)
-			if err != nil {
-				return fmt.Errorf("error decompressing file %s to %s: %v", src, tmpDst, err)
-			}
-			if err := os.Rename(tmpDst, finalName); err != nil {
-				return fmt.Errorf("error renaming file %s to %s: %v", tmpDst, finalName, err)
-			}
-		} else {
-			_ = os.Remove(tmpDst)
-			return fmt.Errorf("cannot uncompress file %s because it seems to be not compressed", src)
+		if err := uncompressOperation(src, dst, inp); err != nil {
+			return err
 		}
 	}
 

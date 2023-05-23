@@ -3,9 +3,12 @@ package dispatch
 import (
 	"FileFlow/fileflows"
 	"compress/gzip"
+	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	"os"
+	"strings"
 )
 
 type FileProcessor interface {
@@ -25,6 +28,56 @@ type FileProcessor interface {
 
 	// ListFiles list all the files in the flow's source directory
 	ListFiles(flow fileflows.FileFlow) []os.FileInfo
+}
+
+func uncompressOperation(src, dst string, inp fs.File) error {
+	tmpDst := dst + ".tmp"
+	out, err := os.Create(tmpDst)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+	if strings.HasSuffix(src, ".gz") {
+		finalName := strings.Replace(dst, ".gz", "", 1)
+		log.Printf("Decompressing %s to %s", src, finalName)
+		err := uncompressFile(inp, out)
+		if err != nil {
+			return fmt.Errorf("error decompressing file %s to %s: %v", src, tmpDst, err)
+		}
+		if err := os.Rename(tmpDst, finalName); err != nil {
+			return fmt.Errorf("error renaming file %s to %s: %v", tmpDst, finalName, err)
+		}
+	} else {
+		_ = os.Remove(tmpDst)
+		return fmt.Errorf("cannot uncompress file %s because it seems to be not compressed", src)
+	}
+
+	return nil
+}
+
+func compressOperation(src, dst string, inp fs.File) error {
+	tmpDst := dst + ".tmp"
+	out, err := os.Create(tmpDst)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+	if !strings.HasSuffix(src, ".gz") {
+		gzName := dst + ".gz"
+		log.Printf("Compressing %s to %s", src, gzName)
+		err := compressFile(inp, out)
+		if err != nil {
+			return fmt.Errorf("error compressing file %s to %s: %v", src, tmpDst, err)
+		}
+		if err := os.Rename(tmpDst, gzName); err != nil {
+			return fmt.Errorf("error renaming file %s to %s: %v", tmpDst, gzName, err)
+		}
+	} else {
+		_ = os.Remove(tmpDst)
+		return fmt.Errorf("cannot compress file %s because it seems to be compressed already", src)
+	}
+
+	return nil
 }
 
 func compressFile(inp fs.File, out *os.File) error {
