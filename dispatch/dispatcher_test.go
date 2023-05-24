@@ -3,23 +3,22 @@ package dispatch
 import (
 	"FileFlow/fileflows"
 	"errors"
+	"os"
 	"regexp"
 	"testing"
 )
+
+var noop = noopFileProcessor{}
 
 func TestDispatchOneFileIntoOneDestination(t *testing.T) {
 	// Given
 	pattern := ".+"
 	flow := fileflows.FileFlow{Name: "Move ACME files", Server: "localhost", Port: 22, SourceFolder: "sftp/acme", Pattern: pattern, DestinationFolders: []string{"/dest1"}, Regexp: regexp.MustCompile(pattern)}
 
-	callback := func(source string, destination string) error {
-		return nil
-	}
-
 	var mock FolderAvailability = new(mockAlwaysTrueFolderAvailability)
 
 	// When
-	dispatcher := NewDispatcher(&flow, mock, callback)
+	dispatcher := NewDispatcher(&flow, mock, noop)
 	dst, err := dispatcher.Dispatch("file_A")
 
 	// Then
@@ -37,14 +36,10 @@ func TestDispatchTwoFileIntoOneDestination(t *testing.T) {
 	pattern := ".+"
 	flow := fileflows.FileFlow{Name: "Move ACME files", Server: "localhost", Port: 22, SourceFolder: "sftp/acme", Pattern: pattern, DestinationFolders: []string{"/dest1"}, Regexp: regexp.MustCompile(pattern)}
 
-	callback := func(source string, destination string) error {
-		return nil
-	}
-
 	var mock FolderAvailability = new(mockAlwaysTrueFolderAvailability)
 
 	// When
-	dispatcher := NewDispatcher(&flow, mock, callback)
+	dispatcher := NewDispatcher(&flow, mock, noop)
 	dst, err := dispatcher.Dispatch("file_A")
 	dst2, err2 := dispatcher.Dispatch("file_B")
 
@@ -67,14 +62,10 @@ func TestDispatchOneFileIntoManyDestinations(t *testing.T) {
 	pattern := ".+"
 	flow := fileflows.FileFlow{Name: "Move ACME files", Server: "localhost", Port: 22, SourceFolder: "sftp/acme", Pattern: pattern, DestinationFolders: []string{"/dest1", "/dest2"}, Regexp: regexp.MustCompile(pattern)}
 
-	callback := func(source string, destination string) error {
-		return nil
-	}
-
 	var mock FolderAvailability = new(mockAlwaysTrueFolderAvailability)
 
 	// When
-	dispatcher := NewDispatcher(&flow, mock, callback)
+	dispatcher := NewDispatcher(&flow, mock, noop)
 	dst, err := dispatcher.Dispatch("file_A")
 
 	// Then
@@ -92,14 +83,10 @@ func TestDispatchTwoFilesIntoManyDestinations(t *testing.T) {
 	pattern := ".+"
 	flow := fileflows.FileFlow{Name: "Move ACME files", Server: "localhost", Port: 22, SourceFolder: "sftp/acme", Pattern: pattern, DestinationFolders: []string{"/dest1", "/dest2"}, Regexp: regexp.MustCompile(pattern)}
 
-	callback := func(source string, destination string) error {
-		return nil
-	}
-
 	var mock FolderAvailability = new(mockAlwaysTrueFolderAvailability)
 
 	// When
-	dispatcher := NewDispatcher(&flow, mock, callback)
+	dispatcher := NewDispatcher(&flow, mock, noop)
 	dst, err := dispatcher.Dispatch("file_A")
 	dst2, err2 := dispatcher.Dispatch("file_B")
 
@@ -122,13 +109,9 @@ func TestDestinationAvailability(t *testing.T) {
 	pattern := ".+"
 	flow := fileflows.FileFlow{Name: "Move ACME files", Server: "localhost", Port: 22, SourceFolder: "sftp/acme", Pattern: pattern, DestinationFolders: []string{"/dest1", "/dest2"}, Regexp: regexp.MustCompile(pattern)}
 
-	callback := func(source string, destination string) error {
-		return nil
-	}
-
 	// When
 	var mock FolderAvailability = new(mockFolderAvailability)
-	dispatcher := NewDispatcher(&flow, mock, callback)
+	dispatcher := NewDispatcher(&flow, mock, noop)
 	dst, err := dispatcher.Dispatch("file_A")
 
 	// Then
@@ -146,13 +129,9 @@ func TestNoDestinationIsAvailable(t *testing.T) {
 	pattern := ".+"
 	flow := fileflows.FileFlow{Name: "Move ACME files", Server: "localhost", Port: 22, SourceFolder: "sftp/acme", Pattern: pattern, DestinationFolders: []string{"/dest1"}, Regexp: regexp.MustCompile(pattern)}
 
-	callback := func(source string, destination string) error {
-		return nil
-	}
-
 	// When
 	var mock FolderAvailability = new(mockFolderAvailability)
-	dispatcher := NewDispatcher(&flow, mock, callback)
+	dispatcher := NewDispatcher(&flow, mock, noop)
 	_, err := dispatcher.Dispatch("file_A")
 
 	// Then
@@ -174,4 +153,18 @@ func (m *mockFolderAvailability) IsAvailable(folder string) bool {
 
 func (m *mockAlwaysTrueFolderAvailability) IsAvailable(_ string) bool {
 	return true
+}
+
+type noopFileProcessor struct{}
+
+func (n noopFileProcessor) ProcessFile(_, _ string, _ fileflows.FlowOperation) error {
+	return nil
+}
+
+func (n noopFileProcessor) OverflowFile(_, _ string) (dst string, err error) {
+	return "/", nil
+}
+
+func (n noopFileProcessor) ListFiles(_ fileflows.FileFlow) FileList {
+	return []os.FileInfo{}
 }
