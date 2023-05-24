@@ -25,7 +25,7 @@ type FileFlow struct {
 	Name               string
 	Server             string
 	Port               int
-	PrivateKeyPath     string
+	PrivateKeyPath     string `yaml:"private_key_path"`
 	SourceFolder       string `yaml:"from"`
 	Pattern            string
 	DestinationFolders []string `yaml:"to"`
@@ -48,18 +48,28 @@ func ReadConfiguration(cfg string) (*FFConfig, error) {
 	flows := make([]FileFlow, len(read.FileFlows))
 	for i, flow := range read.FileFlows {
 		pattern := usedPattern(&flow)
-		flows[i] = FileFlow{
-			flow.Name,
-			flow.Server,
-			usedPort(&flow),
-			flow.PrivateKeyPath,
-			flow.SourceFolder,
-			pattern,
-			flow.DestinationFolders,
-			regexp.MustCompile(pattern),
-			flow.Operation,
-			flow.MaxFileCount,
-			flow.OverflowFolder,
+
+		if isSFTPFlow(&flow) {
+			flows[i] = NewSFTPFileFlow(
+				flow.Name,
+				flow.Server,
+				usedPort(&flow),
+				flow.PrivateKeyPath,
+				flow.SourceFolder,
+				pattern,
+				flow.DestinationFolders,
+				flow.Operation,
+				flow.MaxFileCount,
+				flow.OverflowFolder)
+		} else {
+			flows[i] = NewLocalFileFlow(
+				flow.Name,
+				flow.SourceFolder,
+				pattern,
+				flow.DestinationFolders,
+				flow.Operation,
+				flow.MaxFileCount,
+				flow.OverflowFolder)
 		}
 	}
 
@@ -70,6 +80,10 @@ func ReadConfiguration(cfg string) (*FFConfig, error) {
 	log.Printf("DEBUG - Used configuration: %+v", result)
 
 	return &result, nil
+}
+
+func isSFTPFlow(f *FileFlow) bool {
+	return f.Server != "" && f.PrivateKeyPath != ""
 }
 
 func usedPattern(f *FileFlow) string {
@@ -113,6 +127,10 @@ func NewSFTPFileFlow(name string,
 	operation FlowOperation,
 	maxFileCount int,
 	overflowFolder string) FileFlow {
+
+	if server == "" || port == 0 || privateKeyPath == "" {
+		log.Fatal("SFTP flow configuration error: server, port or private_key_path is empty")
+	}
 
 	return FileFlow{
 		name,

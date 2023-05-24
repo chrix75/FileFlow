@@ -103,6 +103,7 @@ func TestSFTPConfigurationReadWithDefaultValues(t *testing.T) {
 file_flows:
   - name: Move ACME files
     server: localhost
+    private_key_path: /home/user/.ssh/id_rsa
     from: sftp/acme
     to: 
     - /Users/Batman/fileflow/acme
