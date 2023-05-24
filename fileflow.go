@@ -16,10 +16,11 @@ func main() {
 	var wg sync.WaitGroup
 
 	wg.Add(2)
-	flowA := fileflows.NewFileFlow(
+	flowA := fileflows.NewSFTPFileFlow(
 		"Move ACME files",
 		"localhost",
 		22,
+		"/Users/batman/.ssh/test.sftp.privatekey.file",
 		"sftp/acme",
 		".+",
 		[]string{"/Users/batman/sftp/moved"},
@@ -39,7 +40,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 		for {
-			processFlow(flowA, "/Users/batman/.ssh/test.sftp.privatekey.file")
+			processFlow(flowA)
 			time.Sleep(time.Second * 10)
 		}
 	}()
@@ -47,7 +48,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 		for {
-			processFlow(flowB, "/Users/batman/.ssh/test.sftp.privatekey.file")
+			processFlow(flowB)
 			time.Sleep(time.Second * 10)
 		}
 	}()
@@ -55,10 +56,10 @@ func main() {
 	wg.Wait()
 }
 
-func processFlow(flow fileflows.FileFlow, keyFile string) {
+func processFlow(flow fileflows.FileFlow) {
 	var processor dispatch.FileProcessor
 	if flow.IsRemote() {
-		remote := dispatch.Connect(flow, keyFile)
+		remote := dispatch.Connect(flow)
 		defer remote.Close()
 		processor = remote
 		log.Printf("Connected to server SFTP for flow %s", flow.Name)

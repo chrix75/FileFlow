@@ -31,10 +31,11 @@ func TestMoveFileFromSftp(t *testing.T) {
 		_ = os.Remove(expectedResultFile)
 	}()
 
-	flow := fileflows.NewFileFlow(
+	flow := fileflows.NewSFTPFileFlow(
 		"Move Nexus files",
 		"localhost",
 		22,
+		sftpPrivateKeyFile,
 		remoteInputSftpFolder,
 		".+",
 		[]string{localDestFolder},
@@ -43,7 +44,7 @@ func TestMoveFileFromSftp(t *testing.T) {
 		"")
 
 	// When
-	processFlow(flow, sftpPrivateKeyFile)
+	processFlow(flow)
 
 	// Then
 	if _, err := os.Stat(expectedResultFile); err != nil {
@@ -69,10 +70,11 @@ func TestCompressFileFromSftp(t *testing.T) {
 	}()
 
 	// Given
-	flow := fileflows.NewFileFlow(
+	flow := fileflows.NewSFTPFileFlow(
 		"Move Nexus files",
 		"localhost",
 		22,
+		sftpPrivateKeyFile,
 		remoteInputSftpFolder,
 		".+",
 		[]string{localDestFolder},
@@ -81,7 +83,7 @@ func TestCompressFileFromSftp(t *testing.T) {
 		"")
 
 	// When
-	processFlow(flow, sftpPrivateKeyFile)
+	processFlow(flow)
 
 	// Then
 	if _, err := os.Stat(expectedResultFile); err != nil {
@@ -117,7 +119,7 @@ func TestCompressFileFromLocal(t *testing.T) {
 		"")
 
 	// When
-	processFlow(flow, sftpPrivateKeyFile)
+	processFlow(flow)
 
 	// Then
 	if _, err := os.Stat(expectedResultFile); err != nil {
@@ -145,10 +147,11 @@ func TestCancelCompressFileFromSftp(t *testing.T) {
 	}()
 
 	// Given
-	flow := fileflows.NewFileFlow(
+	flow := fileflows.NewSFTPFileFlow(
 		"Move Nexus files",
 		"localhost",
 		22,
+		sftpPrivateKeyFile,
 		remoteInputSftpFolder,
 		".+",
 		[]string{localDestFolder},
@@ -157,7 +160,7 @@ func TestCancelCompressFileFromSftp(t *testing.T) {
 		"")
 
 	// When
-	processFlow(flow, sftpPrivateKeyFile)
+	processFlow(flow)
 
 	// Then
 	if _, err := os.Stat(unexpectedResultFile); err == nil {
@@ -185,10 +188,11 @@ func TestUncompressFileFromSftp(t *testing.T) {
 	}()
 
 	// Given
-	flow := fileflows.NewFileFlow(
+	flow := fileflows.NewSFTPFileFlow(
 		"Move Nexus files",
 		"localhost",
 		22,
+		sftpPrivateKeyFile,
 		remoteInputSftpFolder,
 		".+",
 		[]string{localDestFolder},
@@ -197,7 +201,7 @@ func TestUncompressFileFromSftp(t *testing.T) {
 		"")
 
 	// When
-	processFlow(flow, sftpPrivateKeyFile)
+	processFlow(flow)
 
 	// Then
 	if _, err := os.Stat(expectedResultFile); err != nil {
@@ -233,7 +237,7 @@ func TestUncompressFileFromLocal(t *testing.T) {
 		"")
 
 	// When
-	processFlow(flow, sftpPrivateKeyFile)
+	processFlow(flow)
 
 	// Then
 	if _, err := os.Stat(expectedResultFile); err != nil {
@@ -261,10 +265,11 @@ func TestCancelUncompressFileFromSftp(t *testing.T) {
 	}()
 
 	// Given
-	flow := fileflows.NewFileFlow(
+	flow := fileflows.NewSFTPFileFlow(
 		"Move Nexus files",
 		"localhost",
 		22,
+		sftpPrivateKeyFile,
 		remoteInputSftpFolder,
 		".+",
 		[]string{localDestFolder},
@@ -273,7 +278,7 @@ func TestCancelUncompressFileFromSftp(t *testing.T) {
 		"")
 
 	// When
-	processFlow(flow, sftpPrivateKeyFile)
+	processFlow(flow)
 
 	// Then
 	if _, err := os.Stat(unexpectedResultFile); err == nil {
@@ -305,10 +310,11 @@ func TestMoveToOverflowDir(t *testing.T) {
 	}()
 
 	// Given
-	flow := fileflows.NewFileFlow(
+	flow := fileflows.NewSFTPFileFlow(
 		"Move Nexus files",
 		"localhost",
 		22,
+		sftpPrivateKeyFile,
 		remoteInputSftpFolder,
 		".+",
 		[]string{localDestFolder},
@@ -317,7 +323,7 @@ func TestMoveToOverflowDir(t *testing.T) {
 		localOverflowFolder)
 
 	// When
-	processFlow(flow, sftpPrivateKeyFile)
+	processFlow(flow)
 
 	// Then
 	if _, err := os.Stat(unexpectedResultFile); err == nil {
@@ -349,10 +355,11 @@ func TestMoveToOverflowDirWhileItIsNotEmpty(t *testing.T) {
 	}()
 
 	// Given
-	flow := fileflows.NewFileFlow(
+	flow := fileflows.NewSFTPFileFlow(
 		"Move Nexus files",
 		"localhost",
 		22,
+		sftpPrivateKeyFile,
 		remoteInputSftpFolder,
 		".+",
 		[]string{localDestFolder},
@@ -361,7 +368,7 @@ func TestMoveToOverflowDirWhileItIsNotEmpty(t *testing.T) {
 		localOverflowFolder)
 
 	// When
-	processFlow(flow, sftpPrivateKeyFile)
+	processFlow(flow)
 
 	// Then
 	if _, err := os.Stat(unexpectedResultFile); err == nil {
@@ -401,7 +408,7 @@ func TestMoveFromLocalDir(t *testing.T) {
 		"")
 
 	// When
-	processFlow(flow, sftpPrivateKeyFile)
+	processFlow(flow)
 
 	// Then
 	if _, err := os.Stat(unexpectedLocalFile); err == nil {

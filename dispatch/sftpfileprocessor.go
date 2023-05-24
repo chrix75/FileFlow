@@ -25,9 +25,8 @@ func (p SFTPFileProcessor) Close() {
 
 // Connect to SFTP server and returns a SFTPFileProcessor for the provided flow.
 // flow parameter is the FileFlow description
-// keyFile est the private key file path for the SFTP connection
-func Connect(flow fileflows.FileFlow, keyFile string) SFTPFileProcessor {
-	client := sshClient(flow, keyFile)
+func Connect(flow fileflows.FileFlow) SFTPFileProcessor {
+	client := sshClient(flow, flow.PrivateKeyPath)
 	sc := sftpClient(client)
 
 	processor := SFTPFileProcessor{

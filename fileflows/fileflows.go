@@ -25,6 +25,7 @@ type FileFlow struct {
 	Name               string
 	Server             string
 	Port               int
+	PrivateKeyPath     string
 	SourceFolder       string `yaml:"from"`
 	Pattern            string
 	DestinationFolders []string `yaml:"to"`
@@ -51,6 +52,7 @@ func ReadConfiguration(cfg string) (*FFConfig, error) {
 			flow.Name,
 			flow.Server,
 			usedPort(&flow),
+			flow.PrivateKeyPath,
 			flow.SourceFolder,
 			pattern,
 			flow.DestinationFolders,
@@ -103,9 +105,10 @@ func (f *FileFlow) IsRemote() bool {
 	return f.Port > 0
 }
 
-func NewFileFlow(name string,
+func NewSFTPFileFlow(name string,
 	server string, port int,
-	sourceFolder string, pattern string,
+	privateKeyPath string,
+	sourceFolder, pattern string,
 	destinations []string,
 	operation FlowOperation,
 	maxFileCount int,
@@ -115,6 +118,7 @@ func NewFileFlow(name string,
 		name,
 		server,
 		port,
+		privateKeyPath,
 		sourceFolder,
 		pattern,
 		destinations,

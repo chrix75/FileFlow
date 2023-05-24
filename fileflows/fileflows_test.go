@@ -12,6 +12,7 @@ file_flows:
   - name: Move ACME files
     server: localhost
     port: 22 
+    private_key_path: /home/user/.ssh/id_rsa
     from: sftp/acme
     pattern: .+  
     to:
@@ -147,7 +148,7 @@ func TestDestinationFound(t *testing.T) {
 	// Given
 	pattern := ".+"
 	flow := FileFlow{"Move ACME files",
-		"localhost", 22, "sftp/acme", pattern,
+		"localhost", 22, "sftp/acme", "privateKeyFile", pattern,
 		[]string{"/dest"}, regexp.MustCompile(pattern), Move, 0, ""}
 
 	// When
@@ -166,7 +167,7 @@ func TestDestinationFound(t *testing.T) {
 func TestDestinationNotFound(t *testing.T) {
 	// Given
 	pattern := "foo_.+"
-	flow := FileFlow{"Move ACME files", "localhost", 22, "sftp/acme", pattern,
+	flow := FileFlow{"Move ACME files", "localhost", 22, "privateKeyFile", "sftp/acme", pattern,
 		[]string{"/dest"}, regexp.MustCompile(pattern), Move, 0, ""}
 
 	// When
