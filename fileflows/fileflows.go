@@ -84,7 +84,7 @@ func usedPattern(f *FileFlow) string {
 
 func usedPort(f *FileFlow) int {
 	var usedPort int
-	if f.Port == 0 {
+	if f.Server != "" && f.Port == 0 {
 		usedPort = 22
 	} else {
 		usedPort = f.Port
