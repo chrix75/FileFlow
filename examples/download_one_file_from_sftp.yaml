@@ -1,0 +1,10 @@
+delay: 2
+file_flows:
+  - name: Move ACME files
+    server: localhost
+    port: 22
+    private_key_path: /Users/batman/.ssh/test.sftp.privatekey.file
+    from: sftp/acme
+    pattern: .+
+    to:
+      - /Users/Batman/fileflow/acme

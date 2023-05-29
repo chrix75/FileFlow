@@ -4,7 +4,10 @@ import (
 	"FileFlow/dispatch"
 	"FileFlow/fileflows"
 	"FileFlow/files"
+	"fmt"
 	"log"
+	"os"
+	"os/signal"
 	"sync"
 	"time"
 )
@@ -13,47 +16,52 @@ import (
 // To work, a configuration file must be provided that describes all flows.
 // The configuration file format is described in the README.md.
 func main() {
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: FileFlow <config file>")
+		os.Exit(1)
+	}
+
+	configFile := os.Args[1]
+
+	config, err := fileflows.LoadConfig(configFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	var wg sync.WaitGroup
+	processing := true
 
-	wg.Add(2)
-	flowA := fileflows.NewSFTPFileFlow(
-		"Move ACME files",
-		"localhost",
-		22,
-		"/Users/batman/.ssh/test.sftp.privatekey.file",
-		"sftp/acme",
-		".+",
-		[]string{"/Users/batman/sftp/moved"},
-		fileflows.Move,
-		3,
-		"/Users/batman/sftp/overflow")
-
-	flowB := fileflows.NewLocalFileFlow(
-		"Move from ACME overflow folder",
-		"/Users/batman/sftp/overflow",
-		".+",
-		[]string{"/Users/batman/sftp/moved"},
-		fileflows.Move,
-		3,
-		"")
-
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
 	go func() {
-		defer wg.Done()
-		for {
-			processFlow(flowA)
-			time.Sleep(time.Second * 10)
+		for sig := range c {
+			if sig == os.Interrupt {
+				log.Printf("FileFlow is shutting down...")
+				processing = false
+			}
 		}
 	}()
 
-	go func() {
-		defer wg.Done()
-		for {
-			processFlow(flowB)
-			time.Sleep(time.Second * 10)
-		}
-	}()
+	for _, flow := range config.FileFlows {
+		wg.Add(1)
+
+		currentFlow := flow
+		go func() {
+			defer wg.Done()
+			for {
+				if !processing {
+					break
+				}
+				processFlow(currentFlow)
+				time.Sleep(time.Duration(int(time.Second) * config.Delay))
+			}
+			log.Printf("Flow %s finished", currentFlow.Name)
+		}()
+
+	}
 
 	wg.Wait()
+	log.Printf("All flows finished.")
 }
 
 func processFlow(flow fileflows.FileFlow) {

@@ -4,6 +4,7 @@ package fileflows
 import (
 	"gopkg.in/yaml.v3"
 	"log"
+	"os"
 	"regexp"
 )
 
@@ -17,6 +18,7 @@ const (
 
 // FFConfig is the presentation of all flows defined in the config YAML file.
 type FFConfig struct {
+	Delay     int
 	FileFlows []FileFlow `yaml:"file_flows"`
 }
 
@@ -33,6 +35,15 @@ type FileFlow struct {
 	Operation          FlowOperation
 	MaxFileCount       int
 	OverflowFolder     string
+}
+
+func LoadConfig(path string) (*FFConfig, error) {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return ReadConfiguration(string(content))
 }
 
 // ReadConfiguration reads a config YAML and returns a FFConfig struct.
@@ -73,7 +84,15 @@ func ReadConfiguration(cfg string) (*FFConfig, error) {
 		}
 	}
 
+	var delay int
+	if read.Delay == 0 {
+		delay = 5
+	} else {
+		delay = read.Delay
+	}
+
 	result := FFConfig{
+		delay,
 		flows,
 	}
 
