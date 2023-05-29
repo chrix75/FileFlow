@@ -33,8 +33,8 @@ type FileFlow struct {
 	DestinationFolders []string `yaml:"to"`
 	Regexp             *regexp.Regexp
 	Operation          FlowOperation
-	MaxFileCount       int
-	OverflowFolder     string
+	MaxFileCount       int    `yaml:"max_file_count"`
+	OverflowFolder     string `yaml:"overflow_folder"`
 }
 
 func LoadConfig(path string) (*FFConfig, error) {

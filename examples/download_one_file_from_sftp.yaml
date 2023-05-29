@@ -8,3 +8,12 @@ file_flows:
     pattern: .+
     to:
       - /Users/Batman/fileflow/acme
+    overflow_folder: /Users/Batman/fileflow/overflow
+    max_file_count: 3
+
+  - name: Move from ACME overflow
+    from: /Users/Batman/fileflow/overflow
+    pattern: .+
+    to:
+      - /Users/Batman/fileflow/acme
+    max_file_count: 3
