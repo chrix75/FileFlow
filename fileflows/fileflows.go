@@ -132,7 +132,6 @@ func (f *FileFlow) IsRemote() bool {
 // For overflow, it's valid when one destination folder and maxFileCount are specified.
 // By default, when the number of files reaches the maxFileCount, file downloads are stopped.
 // But, if overflowFolder is specified, file are downloaded into the overflow folder.
-// When then number of files in destination is less than maxFileCount, the application moves files from the overflow folder to the destination folder.
 func NewSFTPFileFlow(name string,
 	server string, port int,
 	privateKeyPath string,
